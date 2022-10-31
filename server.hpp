@@ -14,11 +14,16 @@
 #include<arpa/inet.h>
 using namespace std;
 
-#define INPUT_BUFFER_SIZE 100 
+#define INPUT_BUFFER_SIZE 128
 #define DEFAULT_PORT 1234
 
 class Server {
     public:
+        Server();
+        Server(int port);
+        Server(const Server& orig);
+        virtual ~Server();
+
         void init();
         void loop();
          

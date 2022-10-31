@@ -1,8 +1,14 @@
-main: server client
+TARGET = client server
+CC = g++  
+CFLAGS_OBJ =  -Wall -Wextra -pedantic -g 
 
-server:
-	g++ server.cpp -Wall -Wextra -pedantic -o server
-client:
-	g++ client.cpp -Wall -Wextra -pedantic -o client
+normal: $(TARGET)
+
+client: client.cpp 
+	$(CC) $(CFLAGS_OBJ) client.cpp -o client
+server: main.cpp server.cpp
+	$(CC) $(CFLAGS_OBJ) server.cpp main.cpp -o server
+
 clean:
-	rm server client
+	$(RM) $(TARGET)
+

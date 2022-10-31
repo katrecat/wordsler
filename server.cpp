@@ -1,5 +1,25 @@
 #include "server.hpp"
 
+Server::Server()
+{
+    setup(DEFAULT_PORT);
+}
+
+Server::Server(int port)
+{
+    setup(port);
+}
+
+Server::Server(const Server& orig)
+{
+}
+
+Server::~Server()
+{
+	close(mastersocket);
+}
+
+
 void Server::setup(int port)
 {
     if ((mastersocket = socket(AF_INET,SOCK_STREAM,IPPROTO_TCP)) <0){
@@ -15,7 +35,7 @@ void Server::setup(int port)
     memset(&con_info, 0 , sizeof(con_info)); 
 
     //Socket properties
-    uint16_t hostPort = htons(DEFAULT_PORT);
+    uint16_t hostPort = htons(port);
     con_info.sin_port = hostPort;
     con_info.sin_family = AF_INET;
     con_info.sin_addr.s_addr = htons(INADDR_ANY);
@@ -35,7 +55,7 @@ void Server::initializeSocket()
      * optval - access to flag values(set to TRUE)
      */
 	int optval = 1;
-	if((setsockopt(mastersocket, SOL_SOCKET, SO_REUSEADDR, (char *) &optval, sizeof(optval))) < 0)
+	if((setsockopt(mastersocket, SOL_SOCKET, SO_REUSEADDR,&optval, sizeof(optval))) < 0)
         {
         	perror("[SERVER] [ERROR] setsockopt() failed");
 		    close(mastersocket);
@@ -45,7 +65,7 @@ void Server::initializeSocket()
 void Server::bindSocket()
 {   
     //Binding a previously created socket to a local address
-	if ((bind(mastersocket, (struct sockaddr*) &con_info, sizeof (con_info))) < 0){
+	if ((bind(mastersocket, (struct sockaddr*) &con_info, sizeof (struct sockaddr))) < 0){
 		perror("[SERVER] [ERROR] bind() failed");
         exit(EXIT_FAILURE);
 	}
@@ -90,8 +110,10 @@ void Server::handleNewConnection()
 }
 
 void Server::recvInputFromExisting(int fd)
-{
+{   
     int nbytesrecv = recv(fd, input_buffer, INPUT_BUFFER_SIZE, 0);
+    
+    printf("%s\n", input_buffer);
     if (nbytesrecv <= 0)
     {
         /*If the client does not send any messages,
