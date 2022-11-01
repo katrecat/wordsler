@@ -4,13 +4,11 @@
 #include<cstdio>
 #include<cstdlib>
 #include<cstring>
-#include<fcntl.h>
 #include<unistd.h>
 #include<sys/types.h>
 #include<sys/socket.h>
 #include<netinet/in.h>
 #include<netdb.h>
-#include<iostream> 
 #include<arpa/inet.h>
 using namespace std;
 
@@ -47,17 +45,11 @@ class Server {
         //input buffer 
         char input_buffer[INPUT_BUFFER_SIZE];
 
-        void (*newConnectionCallback) (uint16_t fd);
-        void (*receiveCallback) (uint16_t fd, char *buffer);
-        void (*disconnectCallback) (uint16_t fd);
-
-
         //function prototypes
         void setup(int port);
         void initializeSocket();
         void bindSocket();
         void startListen();
-        void shutdown();
         void handleNewConnection();
         void recvInputFromExisting(int fd);
     
