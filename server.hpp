@@ -27,6 +27,7 @@ class Server {
         void loop();
 
         void setConnectCallback(int (*newConnectCallback)(uint16_t fd));
+        void setDisconnectCallback(void (*newDisconnectCallback)(uint16_t fd));
          
     private:
         // fd_set file descriptor sets for use with FD_ macros        
@@ -49,6 +50,7 @@ class Server {
         char input_buffer[INPUT_BUFFER_SIZE];
 
         int (*connectionCallback)(uint16_t fd);
+        void (*disconnectCallback)(uint16_t fd);
 
         //function prototypes
         void setup(int port);

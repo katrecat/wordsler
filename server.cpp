@@ -128,6 +128,7 @@ void Server::recvInputFromExisting(int fd)
             close(fd);
             // clear the client fd from fd set
             FD_CLR(fd, &masterfds);
+            disconnectCallback(fd);
             return;
         } 
         else 
@@ -190,4 +191,9 @@ void Server::init()
 void Server::setConnectCallback(int (*newConnectCallback)(uint16_t fd))
 {
     connectionCallback = newConnectCallback;
+}
+
+void Server::setDisconnectCallback(void (*newDisconnectCallback)(uint16_t fd))
+{
+    disconnectCallback = newDisconnectCallback;
 }
