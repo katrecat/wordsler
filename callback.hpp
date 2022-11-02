@@ -10,6 +10,7 @@ namespace Callback
 {
     int connectionCallback(uint16_t fd);
     void disconnectCallback(uint16_t fd);
+    void inputCallback(uint16_t fd, char *word);
 }
 
 struct user_info {

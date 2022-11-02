@@ -24,3 +24,13 @@ void Callback::disconnectCallback(uint16_t fd)
             break;
         }
 }
+
+void Callback::inputCallback(uint16_t fd, char *word)
+{
+    for (unsigned int i=0; i<users.size(); i++)
+        if (users[i].fd == fd)
+        {
+            printf("User #%d: %s\n", i, word);
+            break;
+        }
+}
