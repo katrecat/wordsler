@@ -41,8 +41,6 @@ void Server::setup(int port)
     con_info.sin_addr.s_addr = htons(INADDR_ANY);
     // zero the input buffer before use to avoid random data appearing in first receives
     bzero(input_buffer,INPUT_BUFFER_SIZE);
-
-          
 }
 
 void Server::initializeSocket()
@@ -95,17 +93,22 @@ void Server::handleNewConnection()
     socklen_t addrlen = sizeof(client_addr);
     tempsocket = accept(mastersocket, (struct sockaddr*) &client_addr, &addrlen);
         
-    if (tempsocket < 0) {
-            perror("[SERVER] [ERROR] accept() failed");
-            exit(EXIT_FAILURE);
-
-    } else {
-            // Add a descriptor to an masterfds
-            FD_SET(tempsocket, &masterfds);
-            // increment the maximum known file descriptor (select() needs it)
-            if (tempsocket > maxfd) {
-                    maxfd = tempsocket;
-            }
+    if (tempsocket < 0)
+    {
+        perror("[SERVER] [ERROR] accept() failed");
+        exit(EXIT_FAILURE);
+    } else
+    {
+        // Add a descriptor to an masterfds
+        FD_SET(tempsocket, &masterfds);
+        // increment the maximum known file descriptor (select() needs it)
+        if (tempsocket > maxfd)
+            maxfd = tempsocket;
+    }
+    if ((connectionCallback(tempsocket)) < 0)
+    {
+        perror("[SERVER] [CALLBACK] [ERROR] connectionCallback failed");
+        exit(EXIT_FAILURE);
     }
 }
 
@@ -184,5 +187,7 @@ void Server::init()
     startListen();
 }
 
-
-
+void Server::setConnectCallback(int (*newConnectCallback)(uint16_t fd))
+{
+    connectionCallback = newConnectCallback;
+}

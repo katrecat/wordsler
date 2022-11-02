@@ -1,15 +1,16 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP 
 
-#include<cstdio>
-#include<cstdlib>
-#include<cstring>
-#include<unistd.h>
-#include<sys/types.h>
-#include<sys/socket.h>
-#include<netinet/in.h>
-#include<netdb.h>
-#include<arpa/inet.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+#include <vector>
 using namespace std;
 
 #define INPUT_BUFFER_SIZE 128
@@ -24,6 +25,8 @@ class Server {
 
         void init();
         void loop();
+
+        void setConnectCallback(int (*newConnectCallback)(uint16_t fd));
          
     private:
         // fd_set file descriptor sets for use with FD_ macros        
@@ -45,6 +48,8 @@ class Server {
         //input buffer 
         char input_buffer[INPUT_BUFFER_SIZE];
 
+        int (*connectionCallback)(uint16_t fd);
+
         //function prototypes
         void setup(int port);
         void initializeSocket();
@@ -52,7 +57,5 @@ class Server {
         void startListen();
         void handleNewConnection();
         void recvInputFromExisting(int fd);
-    
 };
-
 #endif

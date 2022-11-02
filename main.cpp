@@ -1,8 +1,10 @@
 #include "server.hpp"
+#include "callback.hpp"
 
-Server server;
 int main(int argc, char **argv)
 {
+    Server server;
+    server.setConnectCallback(&Callback::connectionCallback);
     server.init();
     while(true)
         server.loop();
