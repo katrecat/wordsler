@@ -14,3 +14,13 @@ int Callback::connectionCallback(uint16_t fd)
     users.push_back(tempuser);
     return 0;
 }
+
+void Callback::disconnectCallback(uint16_t fd)
+{
+    for (unsigned int i=0; i<users.size(); i++)
+        if (users[i].fd == fd)
+        {
+            users.erase(users.begin() + i);
+            break;
+        }
+}
