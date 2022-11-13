@@ -11,9 +11,6 @@ socketio = SocketIO(app, async_mode=async_mode)
 thread = None
 thread_lock = Lock()
 
-# FIXME: Remove
-users = {}
-
 
 def background_thread():
     """
@@ -24,6 +21,19 @@ def background_thread():
         socketio.emit('global_counter', {'counter': count})
         socketio.sleep(3)
         count += 1
+    return
+
+
+@socketio.on('rcv_message')
+def rcv_message(data):
+    """
+    An event to recive message from client.
+    """
+
+    # FIXME: We should verify message, format it
+    # and eventually forward formatted message to the cpp server.
+    # All the further business logic should be holded by cpp server.
+    print(f"[SERVER]: Client {request.sid} sent: {str(data)}")
     return
 
 
@@ -52,7 +62,6 @@ def connect():
     # FIXME: on client connection we want to pass the data to cpp server
     # instead of storing it on python one
     print(f"[SERVER]: Client {request.sid} connected")
-    users[request.sid] = request.sid
 
     # Do business logic on new connection
     emit('global_counter', {'counter': 0})
@@ -61,9 +70,11 @@ def connect():
 
 @socketio.event
 def disconnect():
-    "Handles client disconnection."
+    """
+    Handles client disconnection.
+    """
 
-    print(f"[SERVER]: Client {users[request.sid]} disconnected.")
+    print(f"[SERVER]: Client {request.sid} disconnected.")
     # Do business logic on client disconnection
     # FIXME: On client disconnect we want to inform cpp server about it
     return

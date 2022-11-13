@@ -17,10 +17,19 @@
                     if (cb)
                         cb();
                 });
+
+                $('form#snd_msg').submit(function(event) {
+                    socket.emit('rcv_message', 'Custom message');
+                    return false;
+                });
             });
         </script>
     </head>
     <body>
+        <h2>Send:</h2>
+        <form id="snd_msg" method="POST" action="#">
+            <input type="submit" value="Send message to server">
+        </form>
         <h2>Receive:</h2>
         <div id="log"></div>
     </body>
