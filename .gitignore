@@ -34,3 +34,6 @@ client
 *.exe
 *.out
 *.app
+
+# Cache
+__pycache__
