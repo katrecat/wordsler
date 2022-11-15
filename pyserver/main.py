@@ -2,6 +2,7 @@
 
 import socket
 import sys
+import helpers
 from queue import Queue
 from threading import Lock
 from flask import Flask, render_template, request
@@ -32,15 +33,18 @@ def background_thread():
 
 
 def connect_to_server():
-    # FIXME
+    """
+    Handles communication with cppserver.
+    Sends all the messages presented in queue to the cpp server.
+    """
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        ret = s.connect((HOST, PORT))
-        print(f"[SERVER] Connected to cpp server: {ret}")
+        s.connect((HOST, PORT))
         while True:
             socketio.sleep(1)
-            if not(queue.empty()):
+            while not(queue.empty()):
                 msg = queue.get()
-                s.sendall(bytes(msg, 'utf-8'))
+                print(msg)
+                s.sendall(msg)
     return
 
 
@@ -75,18 +79,13 @@ def connect():
     On following users only executes business logic.
     """
 
-    global thread
-    with thread_lock:
-        if thread is None:
-            thread = socketio.start_background_task(connect_to_server)
-
     # FIXME: on client connection we want to pass the data to cpp server
     # instead of storing it on python one
     print(f"[SERVER]: Client {request.sid} connected")
-    queue.put(f"Client {request.sid} connected")
+    msg = helpers.MessageType.CONNECT.to_bytes() + bytes(request.sid, 'utf-8')
+    queue.put(msg)
 
     # Do business logic on new connection
-    emit('global_counter', {'counter': 0})
     return
 
 
@@ -97,7 +96,9 @@ def disconnect():
     """
 
     print(f"[SERVER]: Client {request.sid} disconnected.")
-    queue.put(f"Client {request.sid} disconnected")
+    msg = helpers.MessageType.DISCONNECT.to_bytes() + bytes(request.sid,
+                                                            'utf-8')
+    queue.put(msg)
     # Do business logic on client disconnection
     # FIXME: On client disconnect we want to inform cpp server about it
     return
@@ -107,4 +108,7 @@ if __name__ == '__main__':
     if len(sys.argv) < 2:
         print(f"Too few arguments. Use {sys.argv[0]} <port> instead")
         raise(TypeError)
+
+    with thread_lock:
+        thread = socketio.start_background_task(connect_to_server)
     socketio.run(app, port=int(sys.argv[1]))
