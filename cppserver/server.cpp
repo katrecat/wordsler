@@ -135,7 +135,7 @@ void Server::recvInputFromExisting(int fd)
         FD_CLR(fd, &masterfds); // clear the client fd from fd set
         return;
     }
-    inputCallback(fd, input_buffer);
+    inputCallback(fd, input_buffer, nbytesrecv);
     bzero(&input_buffer,INPUT_BUFFER_SIZE); // clear input buffer
 }
 
@@ -195,7 +195,7 @@ void Server::setDisconnectCallback(void (*newDisconnectCallback)(uint16_t fd))
     disconnectCallback = newDisconnectCallback;
 }
 
-void Server::setInputCallback(void (*newInputCallback)(uint16_t fd, char *word))
+void Server::setInputCallback(void (*newInputCallback)(uint16_t fd, char *word, int received))
 {
     inputCallback = newInputCallback;
 }
