@@ -1,6 +1,7 @@
 #include "callback.hpp"
 #include <stdio.h>
 #include <sys/socket.h>
+#include <string.h>
 
 std::vector<user_info> users;
 std::vector<server_info> servers;
@@ -13,11 +14,31 @@ int getMessageID(char *message)
 
 void addUser(int serverid, char *user)
 {
+    user_info tmpuser;
+    tmpuser.serverid = serverid;
+    tmpuser.score = 0;
+    std::copy(user, user+SID_LEN, tmpuser.sid);
+    std::copy(user, user+SID_LEN, tmpuser.username);
+    users.push_back(tmpuser);
     return;
 }
 
 void removeUser(int serverid, char *user)
 {
+    for (unsigned int i=0; i<users.size(); i++)
+    {
+        if (users[i].serverid == serverid &&
+            (strcmp(users[i].sid, user)) == 0)
+        {
+            users.erase(users.begin() + i);
+        }
+    }
+    return;
+}
+
+void handleData(int serverid, char *user, char *message)
+{
+    printf("User %s: %s\n", user, message);
     return;
 }
 
@@ -75,7 +96,7 @@ void Callback::inputCallback(uint16_t fd, char *word, int received)
                     removeUser(servers[i].id, user);
                     break;
                 case 4:
-                    printf("User %s sent: %s\n", user, message);
+                    handleData(servers[i].id, user, message);
                     break;
             }
             break;
