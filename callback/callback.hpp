@@ -6,12 +6,13 @@
 
 #define USERNAME_LEN 32
 #define SID_LEN 20
+#define MSGID_LEN 2
 
 namespace Callback
 {
     int connectionCallback(uint16_t fd);
     void disconnectCallback(uint16_t fd);
-    void inputCallback(uint16_t fd, char *word);
+    void inputCallback(uint16_t fd, char *word, int received);
 }
 
 struct user_info {
