@@ -17,6 +17,12 @@ int Callback::connectionCallback(uint16_t fd)
     }
     tempserver.id = maxid + 1;
     servers.push_back(tempserver);
+
+    // FIXME
+    for (unsigned int i=0; i<servers.size(); i++)
+    {
+        printf("Server #%d is still connected\n", servers[i].id);
+    }
     return 0;
 }
 
@@ -32,7 +38,10 @@ void Callback::disconnectCallback(uint16_t fd)
             break;
         }
     }
+
     // FIXME: Raise error if serverid is still zero
+    printf("Server #%d disconnected\n", serverid);
+
     for (unsigned int i=0; i<users.size(); i++)
     {
         if (users[i].serverid == serverid)
@@ -47,7 +56,7 @@ void Callback::inputCallback(uint16_t fd, char *word)
     for (unsigned int i=0; i<servers.size(); i++)
         if (servers[i].fd == fd)
         {
-            printf("Server #%d: %s\n", i, word);
+            printf("Server #%d: %s\n", servers[i].id, word);
             break;
         }
 }
