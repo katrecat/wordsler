@@ -1,5 +1,5 @@
-#include "server.hpp"
-#include "callback.hpp"
+#include "cppserver/server.hpp"
+#include "callback/callback.hpp"
 
 int main(int argc, char **argv)
 {
