@@ -5,6 +5,7 @@
 #include <vector>
 
 #define USERNAME_LEN 32
+#define SID_LEN 20
 
 namespace Callback
 {
@@ -15,7 +16,13 @@ namespace Callback
 
 struct user_info {
     char username[USERNAME_LEN];
-    int fd;
+    char sid[SID_LEN];
     int score;
+    int serverid;
+};
+
+struct server_info {
+    int id;
+    int fd;
 };
 #endif
