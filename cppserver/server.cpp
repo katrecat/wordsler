@@ -10,10 +10,6 @@ Server::Server(int port)
     setup(port);
 }
 
-Server::Server(const Server& orig)
-{
-}
-
 Server::~Server()
 {
     close(mastersocket);

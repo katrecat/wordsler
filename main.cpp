@@ -1,7 +1,7 @@
 #include "cppserver/server.hpp"
 #include "callback/callback.hpp"
 
-int main(int argc, char **argv)
+int main()
 {
     Server server;
     server.setConnectCallback(&Callback::connectionCallback);
