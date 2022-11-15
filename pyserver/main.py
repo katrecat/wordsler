@@ -20,18 +20,6 @@ PORT = 1234
 queue = Queue()
 
 
-def background_thread():
-    """
-    Sends counter value to 'global_counter' event every three seconds.
-    """
-    count = 0
-    while True:
-        socketio.emit('global_counter', {'counter': count})
-        socketio.sleep(3)
-        count += 1
-    return
-
-
 def connect_to_server():
     """
     Handles communication with cppserver.
@@ -43,7 +31,6 @@ def connect_to_server():
             socketio.sleep(1)
             while not(queue.empty()):
                 msg = queue.get()
-                print(msg)
                 s.sendall(msg)
     return
 
@@ -54,11 +41,11 @@ def rcv_message(data):
     An event to recive message from client.
     """
 
-    # FIXME: We should verify message, format it
-    # and eventually forward formatted message to the cpp server.
-    # All the further business logic should be holded by cpp server.
-    queue.put(f"Client {request.sid} says: {str(data)}")
-    print(f"[SERVER]: Client {request.sid} sent: {str(data)}")
+    # FIXME: We should also include message length so cpp server could
+    # verify if message was sent completely
+    msg = helpers.MessageType.DATA.to_bytes() + bytes(request.sid, 'utf-8')
+    msg += bytes(str(data), 'utf-8')
+    queue.put(msg)
     return
 
 
@@ -79,13 +66,8 @@ def connect():
     On following users only executes business logic.
     """
 
-    # FIXME: on client connection we want to pass the data to cpp server
-    # instead of storing it on python one
-    print(f"[SERVER]: Client {request.sid} connected")
     msg = helpers.MessageType.CONNECT.to_bytes() + bytes(request.sid, 'utf-8')
     queue.put(msg)
-
-    # Do business logic on new connection
     return
 
 
@@ -95,12 +77,9 @@ def disconnect():
     Handles client disconnection.
     """
 
-    print(f"[SERVER]: Client {request.sid} disconnected.")
     msg = helpers.MessageType.DISCONNECT.to_bytes() + bytes(request.sid,
                                                             'utf-8')
     queue.put(msg)
-    # Do business logic on client disconnection
-    # FIXME: On client disconnect we want to inform cpp server about it
     return
 
 
