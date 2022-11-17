@@ -12,6 +12,13 @@ int getMessageID(char *message)
     return id;
 }
 
+int getMessageLength(char *message)
+{
+    int init = MSGID_LEN + SID_LEN;
+    int length = message[init] | message[init + 1] << 8;
+    return length;
+}
+
 void addUser(int serverid, char *message, int length)
 {
     if (length != MSGID_LEN + SID_LEN)
@@ -52,19 +59,23 @@ void removeUser(int serverid, char *message, int length)
     return;
 }
 
+void processData(int serverid, char *user, char *data)
+{
+    // FIXME:
+    return;
+}
+
+
 void handleData(int serverid, char *message, int length)
 {
-    printf("ID : SID : SCORE\n");
-    for (unsigned int i=0; i<users.size(); i++)
-        printf("%d : %s : %d\n", users[i].serverid, users[i].sid, users[i].score);
-    char *data = new char[length-SID_LEN-MSGID_LEN];
+    int mlength = getMessageLength(message);
+    char *data = new char[mlength];
     char *user = new char[SID_LEN];
 
     std::copy(message+MSGID_LEN, message+MSGID_LEN+SID_LEN, user);
-    std::copy(message+MSGID_LEN+SID_LEN, message+length, data);
+    std::copy(message+MSGID_LEN+MSGID_LEN+SID_LEN, message+length, data);
 
-    printf("\nUser %s: %s\n", user, data);
-
+    processData(serverid, user, data);
     delete[] user;
     delete[] data;
     return;

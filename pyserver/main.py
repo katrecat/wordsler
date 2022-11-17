@@ -6,7 +6,7 @@ import helpers
 from queue import Queue
 from threading import Lock
 from flask import Flask, render_template, request
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO
 
 async_mode = None
 
@@ -44,6 +44,7 @@ def rcv_message(data):
     # FIXME: We should also include message length so cpp server could
     # verify if message was sent completely
     msg = helpers.MessageType.DATA.to_bytes() + bytes(request.sid, 'utf-8')
+    msg += len(str(data)[:255]).to_bytes(2, 'little', signed=False)
     msg += bytes(str(data), 'utf-8')
     queue.put(msg)
     return
