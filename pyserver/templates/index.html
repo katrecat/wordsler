@@ -18,8 +18,11 @@
                         cb();
                 });
 
-                $('form#snd_msg').submit(function(event) {
-                    socket.emit('rcv_message', 'Custom message');
+                $('form#snd_word').submit(function(event) {
+                    var data = $('#input_word').val();
+                    if (data) {
+                        socket.emit('rcv_msg', data);
+                    }
                     return false;
                 });
             });
@@ -27,8 +30,9 @@
     </head>
     <body>
         <h2>Send:</h2>
-        <form id="snd_msg" method="POST" action="#">
-            <input type="submit" value="Send message to server">
+        <form id="snd_word" method="POST" action="$">
+            <input type="text" id="input_word" value="Word" maxlength="254">
+            <input type="submit" value="Send">
         </form>
         <h2>Receive:</h2>
         <div id="log"></div>

@@ -35,8 +35,8 @@ def connect_to_server():
     return
 
 
-@socketio.on('rcv_message')
-def rcv_message(data):
+@socketio.on('rcv_msg')
+def rcv_msg(data):
     """
     An event to recive message from client.
     """
