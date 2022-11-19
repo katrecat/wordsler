@@ -13,7 +13,7 @@
 #include <vector>
 using namespace std;
 
-#define INPUT_BUFFER_SIZE 279
+#define INPUT_BUFFER_SIZE 2
 #define DEFAULT_PORT 1234
 
 class Server {
