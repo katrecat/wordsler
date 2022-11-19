@@ -8,58 +8,11 @@ std::vector<server_info> servers;
 std::vector<std::string> words;
 struct Dictionary dict = Dictionary::load("./callback/words.txt");
 
-int getMessageID(char *message)
+unsigned int numFromBytes(char *message)
 {
-    int id = message[0] | message[1] << 8;
-    return id;
-}
-
-int getMessageLength(char *message)
-{
-    int init = MSGID_LEN + SID_LEN;
-    int length = message[init] | message[init + 1] << 8;
-    return length;
-}
-
-void addUser(int serverid, char *message, int length)
-{
-    if (length != MSGID_LEN + SID_LEN)
-    {
-        fprintf(stderr, "[CALLBACK]: [ADD USER]: ERROR: Length doesn't correspond. Aborting user adding\n");
-        return;
-    }
-
-    user_info tmpuser;
-    tmpuser.serverid = serverid;
-    tmpuser.score = 0;
-    std::copy(message+MSGID_LEN, message+MSGID_LEN+SID_LEN, tmpuser.sid);
-    std::copy(message+MSGID_LEN, message+MSGID_LEN+SID_LEN, tmpuser.username);
-    tmpuser.sid[SID_LEN] = '\0';
-    users.push_back(tmpuser);
-    return;
-}
-
-void removeUser(int serverid, char *message, int length)
-{
-    if (length != MSGID_LEN + SID_LEN)
-    {
-        fprintf(stderr, "[CALLBACK]: [REMOVE USER]: ERROR: Length doesn't correspond. Aborting user removing\n");
-        return;
-    }
-
-    char *user = new char[SID_LEN];
-    std::copy(message+MSGID_LEN, message+length, user);
-
-    for (unsigned int i=0; i<users.size(); i++)
-    {
-        if (users[i].serverid == serverid &&
-            (strcmp(users[i].sid, user)) == 0)
-        {
-            users.erase(users.begin() + i);
-        }
-    }
-    delete[] user;
-    return;
+    unsigned int number = (((unsigned int) ((unsigned char) message[1])) & 255)<<8;
+    number += (((unsigned char) message[0])&255);
+    return number;
 }
 
 void addPoint(int serverid, char *user)
@@ -103,22 +56,77 @@ void processData(int serverid, char *user, char *data)
     return;
 }
 
-
-void handleData(int serverid, char *message, int length)
+void addUser(int fd, int serverid)
 {
-    int mlength = getMessageLength(message);
-    char *data = new char[mlength+1];
-    char *user = new char[SID_LEN];
-
-    std::copy(message+MSGID_LEN, message+MSGID_LEN+SID_LEN, user);
-    std::copy(message+MSGID_LEN*2+SID_LEN, message+MSGID_LEN*2+SID_LEN+mlength, data);
-    data[mlength] = '\0';
-
-    processData(serverid, user, data);
-    delete[] user;
-    delete[] data;
+    user_info tmpuser;
+    if ((recv(fd, tmpuser.sid, SID_LEN, 0)) != SID_LEN)
+    {
+        fprintf(stderr, "[CALLBACK]: [ADD USER]: ERROR: Length doesn't correspond. Aborting user adding\n");
+        return;
+    }
+    tmpuser.sid[SID_LEN] = '\0';
+    tmpuser.serverid = serverid;
+    tmpuser.score = 0;
+    std::copy(tmpuser.sid, tmpuser.sid+SID_LEN+1, tmpuser.username);
+    users.push_back(tmpuser);
     return;
 }
+
+void removeUser(int fd, int serverid)
+{
+    char *user = new char[SID_LEN];
+    if ((recv(fd, user, SID_LEN, 0)) != SID_LEN)
+    {
+        fprintf(stderr, "[CALLBACK]: [REMOVE USER]: ERROR: Length doesn't correspond. Aborting user removing\n");
+        return;
+    }
+    for (unsigned int i=0; i<users.size(); i++)
+    {
+        if (users[i].serverid == serverid &&
+            (strcmp(users[i].sid, user)) == 0)
+        {
+            users.erase(users.begin() + i);
+        }
+    }
+    delete[] user;
+    return;
+}
+
+void handleData(int fd, int serverid)
+{
+    // FIXME Move to separate function
+    char *user = new char[SID_LEN];
+    if ((recv(fd, user, SID_LEN, 0)) != SID_LEN)
+    {
+        fprintf(stderr, "[CALLBACK]: [HANDLE DATA]: ERROR: Length doesn't correspond. Exiting\n");
+        exit(-1);
+        return;
+    }
+
+    char *length = new char[MSGID_LEN];
+    if ((recv(fd, length, MSGID_LEN, 0)) != MSGID_LEN)
+    {
+        fprintf(stderr, "[CALLBACK]: [HANDLE DATA]: ERROR: Length doesn't correspond. Exiting\n");
+        exit(-1);
+        return;
+    }
+    int mlength = numFromBytes(length);
+    delete[] length;
+
+    char *message = new char[mlength+1];
+    message[mlength] = '\0';
+    if ((recv(fd, message, mlength, 0)) != mlength)
+    {
+        fprintf(stderr, "[CALLBACK]: [HANDLE DATA]: ERROR: Length doesn't correspond. Exiting\n");
+        exit(-1);
+        return;
+    }
+    processData(serverid, user, message);
+    delete[] user;
+    delete[] message;
+    return;
+}
+
 
 int Callback::connectionCallback(uint16_t fd)
 {
@@ -143,20 +151,20 @@ void Callback::inputCallback(uint16_t fd, char *message, int received)
         return;
     }
 
-    int id = getMessageID(message);
+    int id = numFromBytes(message);
     for (unsigned int i=0; i<servers.size(); i++)
     {
         if (servers[i].fd == fd)
         {
             switch(id) {
                 case 2:
-                    addUser(servers[i].id, message, received);
+                    addUser(fd, servers[i].id);
                     break;
                 case 3:
-                    removeUser(servers[i].id, message, received);
+                    removeUser(fd, servers[i].id);
                     break;
                 case 4:
-                    handleData(servers[i].id, message, received);
+                    handleData(fd, servers[i].id);
                     break;
             }
             break;
