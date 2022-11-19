@@ -26,6 +26,7 @@ class Server {
         void init();
         void loop();
 
+        void setInitCallback(void (*newInitCallback)(void));
         void setConnectCallback(int (*newConnectCallback)(uint16_t fd));
         void setDisconnectCallback(void (*newDisconnectCallback)(uint16_t fd));
         void setInputCallback(void (*newInputCallback)(uint16_t fd, char *word, int received));
@@ -50,6 +51,7 @@ class Server {
         //input buffer 
         char input_buffer[INPUT_BUFFER_SIZE];
 
+        void (*initCallback)(void);
         int (*connectionCallback)(uint16_t fd);
         void (*disconnectCallback)(uint16_t fd);
         void (*inputCallback)(uint16_t fd, char *word, int received);

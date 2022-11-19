@@ -181,8 +181,14 @@ void Server::loop(){
 void Server::init()
 {
     initializeSocket();
+    initCallback();
     bindSocket();
     startListen();
+}
+
+void Server::setInitCallback(void (*newInitCallback)(void))
+{
+    initCallback = newInitCallback;
 }
 
 void Server::setConnectCallback(int (*newConnectCallback)(uint16_t fd))

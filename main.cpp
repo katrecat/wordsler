@@ -7,6 +7,7 @@ int main()
     server.setConnectCallback(&Callback::connectionCallback);
     server.setDisconnectCallback(&Callback::disconnectCallback);
     server.setInputCallback(&Callback::inputCallback);
+    server.setInitCallback(&Callback::initCallback);
     server.init();
     while(true)
         server.loop();
