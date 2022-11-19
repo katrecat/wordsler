@@ -5,6 +5,8 @@
 
 std::vector<user_info> users;
 std::vector<server_info> servers;
+std::vector<std::string> words;
+struct Dictionary dict = Dictionary::load("./callback/words.txt");
 
 int getMessageID(char *message)
 {
@@ -61,7 +63,15 @@ void removeUser(int serverid, char *message, int length)
 
 void processData(int serverid, char *user, char *data)
 {
-    // FIXME:
+    std::string sentData = std::string(data);
+    for (int i=0; i<WORDS; i++)
+    {
+        if ((strcmp(sentData.c_str(), words[i].c_str())) == 0)
+        {
+            printf("%s and %s are equal!\n", sentData.c_str(), words[i].c_str());
+            break;
+        }
+    }
     return;
 }
 
@@ -148,4 +158,20 @@ void Callback::disconnectCallback(uint16_t fd)
             users.erase(users.begin() + i);
         }
     }
+}
+
+void Callback::initCallback(void)
+{
+    int max = dict.words.size();
+    std::srand((unsigned) time(NULL));
+    int randint;
+    for (int i=0; i<WORDS; i++)
+    {
+        randint = std::rand() % max;
+        words.push_back(dict.words[randint]);
+    }
+
+    for (int i=0; i<WORDS; i++)
+        printf("%s\n", words[i].c_str());
+    return;
 }
