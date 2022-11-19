@@ -41,11 +41,10 @@ def rcv_msg(data):
     An event to recive message from client.
     """
 
-    # FIXME: We should also include message length so cpp server could
-    # verify if message was sent completely
-    msg = helpers.MessageType.DATA.to_bytes() + bytes(request.sid, 'utf-8')
-    msg += len(str(data)[:255]).to_bytes(2, 'little', signed=False)
-    msg += bytes(str(data), 'utf-8')
+    data = str(data)[:255]
+    msg_len = len(data).to_bytes(2, 'little', signed=True)
+    msg_typ = helpers.MessageType.DATA.to_bytes() + bytes(request.sid, 'utf-8')
+    msg = msg_typ + msg_len + bytes(data, 'utf-8')
     queue.put(msg)
     return
 
