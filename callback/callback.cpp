@@ -32,8 +32,9 @@ void addUser(int serverid, char *message, int length)
     user_info tmpuser;
     tmpuser.serverid = serverid;
     tmpuser.score = 0;
-    std::copy(message+MSGID_LEN, message+length, tmpuser.sid);
-    std::copy(message+MSGID_LEN, message+length, tmpuser.username);
+    std::copy(message+MSGID_LEN, message+MSGID_LEN+SID_LEN, tmpuser.sid);
+    std::copy(message+MSGID_LEN, message+MSGID_LEN+SID_LEN, tmpuser.username);
+    tmpuser.sid[SID_LEN] = '\0';
     users.push_back(tmpuser);
     return;
 }
@@ -61,17 +62,44 @@ void removeUser(int serverid, char *message, int length)
     return;
 }
 
-void processData(int serverid, char *user, char *data)
+void addPoint(int serverid, char *user)
 {
-    std::string sentData = std::string(data);
-    for (int i=0; i<WORDS; i++)
+    for (unsigned int i=0; i<users.size(); i++)
     {
-        if ((strcmp(sentData.c_str(), words[i].c_str())) == 0)
+        if (users[i].serverid == serverid &&
+            (strcmp(users[i].sid, user)) == 0)
         {
-            printf("%s and %s are equal!\n", sentData.c_str(), words[i].c_str());
+            users[i].score = users[i].score + 1;
             break;
         }
     }
+    return;
+}
+
+void updateWords(int index)
+{
+    words.erase(words.begin() + index);
+    int max = dict.words.size();
+    int randint = std::rand() % max;
+    words.push_back(dict.words[randint]);
+    return;
+}
+
+void processData(int serverid, char *user, char *data)
+{
+    for (int i=0; i<WORDS; i++)
+    {
+        if ((strcmp(data, words[i].c_str())) == 0)
+        {
+            addPoint(serverid, user);
+            updateWords(i);
+            break;
+        }
+    }
+
+    // FIXME
+    for (int i=0; i<WORDS; i++)
+        printf("%s\n", words[i].c_str());
     return;
 }
 
@@ -79,11 +107,12 @@ void processData(int serverid, char *user, char *data)
 void handleData(int serverid, char *message, int length)
 {
     int mlength = getMessageLength(message);
-    char *data = new char[mlength];
+    char *data = new char[mlength+1];
     char *user = new char[SID_LEN];
 
     std::copy(message+MSGID_LEN, message+MSGID_LEN+SID_LEN, user);
-    std::copy(message+MSGID_LEN+MSGID_LEN+SID_LEN, message+length, data);
+    std::copy(message+MSGID_LEN*2+SID_LEN, message+MSGID_LEN*2+SID_LEN+mlength, data);
+    data[mlength] = '\0';
 
     processData(serverid, user, data);
     delete[] user;

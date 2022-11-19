@@ -37,7 +37,7 @@ struct Dictionary {
 
 struct user_info {
     char username[USERNAME_LEN];
-    char sid[SID_LEN];
+    char sid[SID_LEN+1];
     int score;
     int serverid;
 };
