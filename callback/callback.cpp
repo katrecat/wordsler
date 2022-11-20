@@ -119,6 +119,19 @@ void sendWords(int fd)
 void sendPlayers(int fd)
 {
     char *len = new char[MSGID_LEN];
+    numToBytes(users.size(), len);
+    send(fd, len, MSGID_LEN, 0);
+    for (int i=0; i<users.size(); i++)
+    {
+        numToBytes(strlen(users[i].username), len);
+        send(fd, len, MSGID_LEN, 0);
+        send(fd, users[i].username, strlen(users[i].username), 0);
+        numToBytes(MSGID_LEN, len);
+        send(fd, len, MSGID_LEN, 0);
+        numToBytes(users[i].score, len);
+        send(fd, len, MSGID_LEN, 0);
+    }
+    delete[] len;
     return;
 }
 
@@ -157,8 +170,10 @@ void handleData(int fd, int serverid)
     numToBytes(status, msg);
     send(fd, msg, MSGID_LEN, 0);
     if (status == 0)
+    {
         sendWords(fd);
-
+        sendPlayers(fd);
+    }
     delete[] msg;
     delete[] user;
     delete[] message;
@@ -178,6 +193,7 @@ int Callback::connectionCallback(uint16_t fd)
     tempserver.id = maxid + 1;
     servers.push_back(tempserver);
     sendWords(fd);
+    sendPlayers(fd);
     return 0;
 }
 
