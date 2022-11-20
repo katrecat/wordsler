@@ -8,6 +8,7 @@ from queue import Queue
 from threading import Lock
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO
+from random import randint
 
 async_mode = None
 
@@ -20,15 +21,22 @@ HOST = "127.0.0.1"
 PORT = 1234
 MSGID_LEN = 2
 WORDS = []
+SEND = []
 PLAYERS = []
 queue = Queue()
+SIZE = 512
+
+
+def update_canvas():
+    socketio.emit('canvas_event', {'data': SEND})
+    return
 
 
 def receive_words(socket):
     """
     Fetches the word list from cpp server
     """
-    global WORDS
+    global WORDS, SEND
     WORDS = []
     amount = socket.recv(MSGID_LEN)
     amount = int.from_bytes(amount, 'little', signed=False)
@@ -38,7 +46,22 @@ def receive_words(socket):
         word = socket.recv(wordlen)
         word = helpers.wordFromBytes(word)
         WORDS.append(word)
-    print(WORDS)
+
+    if not(SEND):
+        SEND = [[x, randint(0, SIZE - 8 * len(x)), randint(12, SIZE)]
+                for x in WORDS]
+    else:
+        for i in range(len(WORDS)):
+            if SEND[i][0] != WORDS[i]:
+                if i != (len(SEND)-1):
+                    SEND = SEND[:i] + SEND[i+1:]
+                else:
+                    SEND = SEND[:i]
+                x = randint(0, SIZE - 8 * len(WORDS[-1]))
+                y = randint(12, SIZE)
+                to_add = [WORDS[-1], x, y]
+                SEND.append(to_add)
+                break
     return
 
 
@@ -72,11 +95,12 @@ def connect_to_server():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((HOST, PORT))
         while True:
-            socketio.sleep(1)
+            socketio.sleep(0.0001)
             read_sockets, _, _ = select.select([s], [], [], 0)
             for sock in read_sockets:
                 receive_words(sock)
                 receive_players(sock)
+                update_canvas()
             if not(queue.empty()):
                 msg = queue.get()
                 s.sendall(msg)
