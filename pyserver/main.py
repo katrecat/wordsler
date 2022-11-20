@@ -17,7 +17,30 @@ thread_lock = Lock()
 
 HOST = "127.0.0.1"
 PORT = 1234
+MSGID_LEN = 2
+WORDS = []
 queue = Queue()
+
+
+def receive_words(socket):
+    """
+    Fetches the word list from cpp server
+    """
+    global WORDS
+    WORDS = []
+    amount = socket.recv(MSGID_LEN)
+    amount = int.from_bytes(amount, 'little', signed=False)
+    for i in range(amount):
+        wordlen = socket.recv(MSGID_LEN)
+        wordlen = int.from_bytes(wordlen, 'little', signed=False)
+        word = socket.recv(wordlen)
+        word = helpers.wordFromBytes(word)
+        WORDS.append(word)
+    print(WORDS)
+
+
+def receive_players(socket):
+    return
 
 
 def connect_to_server():
@@ -27,11 +50,19 @@ def connect_to_server():
     """
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((HOST, PORT))
+        receive_words(s)
+        receive_players(s)
         while True:
             socketio.sleep(1)
             while not(queue.empty()):
                 msg = queue.get()
                 s.sendall(msg)
+                if msg[:MSGID_LEN] == helpers.MessageType.DATA.to_bytes():
+                    response = s.recv(MSGID_LEN)
+                    response = helpers.MessageType.from_bytes(response)
+                    if response == helpers.MessageType.OK:
+                        receive_words(s)
+                        receive_players(s)
     return
 
 
