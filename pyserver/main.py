@@ -19,6 +19,7 @@ HOST = "127.0.0.1"
 PORT = 1234
 MSGID_LEN = 2
 WORDS = []
+PLAYERS = []
 queue = Queue()
 
 
@@ -37,9 +38,28 @@ def receive_words(socket):
         word = helpers.wordFromBytes(word)
         WORDS.append(word)
     print(WORDS)
+    return
 
 
 def receive_players(socket):
+    """
+    Fetches the players list from cpp server
+    """
+    global PLAYERS
+    PLAYERS = []
+    amount = socket.recv(MSGID_LEN)
+    amount = int.from_bytes(amount, 'little', signed=False)
+    for i in range(amount):
+        usernamelen = socket.recv(MSGID_LEN)
+        usernamelen = int.from_bytes(usernamelen, 'little', signed=False)
+        username = socket.recv(usernamelen)
+        username = helpers.wordFromBytes(username)
+        scorelen = socket.recv(MSGID_LEN)
+        scorelen = int.from_bytes(scorelen, 'little', signed=False)
+        score = socket.recv(scorelen)
+        score = int.from_bytes(score, 'little', signed=False)
+        PLAYERS.append((username, score))
+    print(PLAYERS)
     return
 
 
