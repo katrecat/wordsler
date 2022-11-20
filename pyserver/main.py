@@ -3,6 +3,7 @@
 import socket
 import sys
 import helpers
+import select
 from queue import Queue
 from threading import Lock
 from flask import Flask, render_template, request
@@ -70,19 +71,15 @@ def connect_to_server():
     """
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((HOST, PORT))
-        receive_words(s)
-        receive_players(s)
         while True:
             socketio.sleep(1)
-            while not(queue.empty()):
+            read_sockets, _, _ = select.select([s], [], [], 0)
+            for sock in read_sockets:
+                receive_words(sock)
+                receive_players(sock)
+            if not(queue.empty()):
                 msg = queue.get()
                 s.sendall(msg)
-                if msg[:MSGID_LEN] == helpers.MessageType.DATA.to_bytes():
-                    response = s.recv(MSGID_LEN)
-                    response = helpers.MessageType.from_bytes(response)
-                    if response == helpers.MessageType.OK:
-                        receive_words(s)
-                        receive_players(s)
     return
 
 
