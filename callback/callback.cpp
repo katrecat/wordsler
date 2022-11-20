@@ -101,37 +101,45 @@ void removeUser(int fd, int serverid)
     return;
 }
 
-void sendWords(int fd)
+void sendWords(void)
 {
-    char *len = new char[MSGID_LEN];
-    numToBytes(WORDS, len);
-    send(fd, len, MSGID_LEN, 0);
-    for (int i=0; i<WORDS; i++)
+    for (unsigned int i=0; i<servers.size(); i++)
     {
-        numToBytes(strlen(words[i].c_str()), len);
+        int fd = servers[i].fd;
+        char *len = new char[MSGID_LEN];
+        numToBytes(WORDS, len);
         send(fd, len, MSGID_LEN, 0);
-        send(fd, words[i].c_str(), strlen(words[i].c_str()), 0);
+        for (int i=0; i<WORDS; i++)
+        {
+            numToBytes(strlen(words[i].c_str()), len);
+            send(fd, len, MSGID_LEN, 0);
+            send(fd, words[i].c_str(), strlen(words[i].c_str()), 0);
+        }
+        delete[] len;
     }
-    delete[] len;
     return;
 }
 
-void sendPlayers(int fd)
+void sendPlayers(void)
 {
-    char *len = new char[MSGID_LEN];
-    numToBytes(users.size(), len);
-    send(fd, len, MSGID_LEN, 0);
-    for (int i=0; i<users.size(); i++)
+    for (unsigned int i=0; i<servers.size(); i++)
     {
-        numToBytes(strlen(users[i].username), len);
+        int fd = servers[i].fd;
+        char *len = new char[MSGID_LEN];
+        numToBytes(users.size(), len);
         send(fd, len, MSGID_LEN, 0);
-        send(fd, users[i].username, strlen(users[i].username), 0);
-        numToBytes(MSGID_LEN, len);
-        send(fd, len, MSGID_LEN, 0);
-        numToBytes(users[i].score, len);
-        send(fd, len, MSGID_LEN, 0);
+        for (unsigned int i=0; i<users.size(); i++)
+        {
+            numToBytes(strlen(users[i].username), len);
+            send(fd, len, MSGID_LEN, 0);
+            send(fd, users[i].username, strlen(users[i].username), 0);
+            numToBytes(MSGID_LEN, len);
+            send(fd, len, MSGID_LEN, 0);
+            numToBytes(users[i].score, len);
+            send(fd, len, MSGID_LEN, 0);
+        }
+        delete[] len;
     }
-    delete[] len;
     return;
 }
 
@@ -166,15 +174,11 @@ void handleData(int fd, int serverid)
     }
 
     int status = processData(serverid, user, message);
-    char *msg = new char[MSGID_LEN];
-    numToBytes(status, msg);
-    send(fd, msg, MSGID_LEN, 0);
     if (status == 0)
     {
-        sendWords(fd);
-        sendPlayers(fd);
+        sendWords();
+        sendPlayers();
     }
-    delete[] msg;
     delete[] user;
     delete[] message;
     return;
@@ -192,8 +196,8 @@ int Callback::connectionCallback(uint16_t fd)
     }
     tempserver.id = maxid + 1;
     servers.push_back(tempserver);
-    sendWords(fd);
-    sendPlayers(fd);
+    sendWords();
+    sendPlayers();
     return 0;
 }
 
@@ -213,9 +217,13 @@ void Callback::inputCallback(uint16_t fd, char *message, int received)
             switch(id) {
                 case 2:
                     addUser(fd, servers[i].id);
+                    sendWords();
+                    sendPlayers();
                     break;
                 case 3:
                     removeUser(fd, servers[i].id);
+                    sendWords();
+                    sendPlayers();
                     break;
                 case 4:
                     handleData(fd, servers[i].id);
