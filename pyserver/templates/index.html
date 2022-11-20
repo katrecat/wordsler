@@ -12,8 +12,21 @@
                 // The callback function is invoked whenever the server emits data
                 // to the client. The data is then displayed in the "Received"
                 // section of the page.
-                socket.on('global_counter', function(msg, cb) {
-                    $('#log').append('<br>' + $('<div/>').text('Recieved #' + msg.counter).html());
+                socket.on('canvas_event', function(msg, cb) {
+                    var canvas = document.getElementById("canvas_queries");
+                    // var canvas = $("#canvas_queries");
+                    var ctx = canvas.getContext('2d');
+                    var width = canvas.width;
+                    var height = canvas.height;
+                    ctx.clearRect(0, 0, width, height);
+                    for (var i=0; i<msg.data.length; i++) {
+                        ctx.font = "15px Comic Sans MS";
+                        ctx.fillStyle = "red";
+                        ctx.textAlign = "left"
+                        x = Math.random() * (height)
+                        y = Math.random() * (width)
+                        ctx.fillText(msg.data[i][0], msg.data[i][1], msg.data[i][2]);
+                    }
                     if (cb)
                         cb();
                 });
@@ -29,12 +42,13 @@
         </script>
     </head>
     <body>
-        <h2>Send:</h2>
-        <form id="snd_word" method="POST" action="$">
-            <input type="text" id="input_word" value="Word" maxlength="254">
-            <input type="submit" value="Send">
-        </form>
-        <h2>Receive:</h2>
-        <div id="log"></div>
+        <div id="main_div" align="center">
+            <canvas id="canvas_queries" width="512px" height="512px" style="border:1px solid #d3d3d3;">Your browser doesn't support HTML5 canvas tag.</canvas>
+            <form id="snd_word" method="POST" action="$">
+                <input type="text" id="input_word" value="Word" maxlength="254">
+                <input type="submit" value="Send">
+            </form>
+            <div id="log"></div>
+        </div>
     </body>
 </html>
