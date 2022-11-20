@@ -14,12 +14,14 @@ class MessageType(Enum):
     CONNECT - message indicating user connection
     DISCONNECT - message indicating user disconnect
     DATA - message indicating user data
+    WRONG - messgae indicating provided word was wrong
     """
     OK = 0
     ERROR = 1
     CONNECT = 2
     DISCONNECT = 3
     DATA = 4
+    WRONG = 5
 
     def to_bytes(self) -> str:
         """
@@ -30,3 +32,22 @@ class MessageType(Enum):
         bytes : converted message type
         """
         return int(self.value).to_bytes(2, 'little', signed=False)
+
+    def from_bytes(value: bytes) -> 'MessageType':
+        """
+        Converts 2-byte bytes to MessageType enum.
+
+        Parameters
+        ----------
+        value: bytes
+            enum in bytes
+
+        Returns
+        -------
+        MessageType : enum value
+        """
+        return MessageType(int.from_bytes(value, 'little', signed=False))
+
+
+def wordFromBytes(word: bytes) -> str:
+    return word.decode('utf-8')
