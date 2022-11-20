@@ -101,6 +101,27 @@ void removeUser(int fd, int serverid)
     return;
 }
 
+void sendWords(int fd)
+{
+    char *len = new char[MSGID_LEN];
+    numToBytes(WORDS, len);
+    send(fd, len, MSGID_LEN, 0);
+    for (int i=0; i<WORDS; i++)
+    {
+        numToBytes(strlen(words[i].c_str()), len);
+        send(fd, len, MSGID_LEN, 0);
+        send(fd, words[i].c_str(), strlen(words[i].c_str()), 0);
+    }
+    delete[] len;
+    return;
+}
+
+void sendPlayers(int fd)
+{
+    char *len = new char[MSGID_LEN];
+    return;
+}
+
 void handleData(int fd, int serverid)
 {
     // FIXME Move to separate function
@@ -130,12 +151,19 @@ void handleData(int fd, int serverid)
         exit(-1);
         return;
     }
-    processData(serverid, user, message);
+
+    int status = processData(serverid, user, message);
+    char *msg = new char[MSGID_LEN];
+    numToBytes(status, msg);
+    send(fd, msg, MSGID_LEN, 0);
+    if (status == 0)
+        sendWords(fd);
+
+    delete[] msg;
     delete[] user;
     delete[] message;
     return;
 }
-
 
 int Callback::connectionCallback(uint16_t fd)
 {
@@ -149,6 +177,7 @@ int Callback::connectionCallback(uint16_t fd)
     }
     tempserver.id = maxid + 1;
     servers.push_back(tempserver);
+    sendWords(fd);
     return 0;
 }
 
