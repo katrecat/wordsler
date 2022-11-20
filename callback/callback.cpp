@@ -10,9 +10,16 @@ struct Dictionary dict = Dictionary::load("./callback/words.txt");
 
 unsigned int numFromBytes(char *message)
 {
-    unsigned int number = (((unsigned int) ((unsigned char) message[1])) & 255)<<8;
-    number += (((unsigned char) message[0])&255);
+    unsigned int number = (((unsigned int) ((unsigned char) message[1])) & 0xFF) << 8;
+    number += (((unsigned char) message[0]) & 0xFF);
     return number;
+}
+
+void numToBytes(int num, char *message)
+{
+    message[0] = (num) & 0xFF;
+    message[1] = (num >> 8) & 0xFF;
+    return;
 }
 
 void addPoint(int serverid, char *user)
@@ -38,14 +45,16 @@ void updateWords(int index)
     return;
 }
 
-void processData(int serverid, char *user, char *data)
+int processData(int serverid, char *user, char *data)
 {
+    int status = 5;
     for (int i=0; i<WORDS; i++)
     {
         if ((strcmp(data, words[i].c_str())) == 0)
         {
             addPoint(serverid, user);
             updateWords(i);
+            status = 0;;
             break;
         }
     }
@@ -53,7 +62,7 @@ void processData(int serverid, char *user, char *data)
     // FIXME
     for (int i=0; i<WORDS; i++)
         printf("%s\n", words[i].c_str());
-    return;
+    return status;
 }
 
 void addUser(int fd, int serverid)
