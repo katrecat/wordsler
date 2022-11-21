@@ -14,14 +14,14 @@ class MessageType(Enum):
     CONNECT - message indicating user connection
     DISCONNECT - message indicating user disconnect
     DATA - message indicating user data
-    WRONG - messgae indicating provided word was wrong
+    USERNAME - message indicating user setting username
     """
     OK = 0
     ERROR = 1
     CONNECT = 2
     DISCONNECT = 3
     DATA = 4
-    WRONG = 5
+    USERNAME = 5
 
     def to_bytes(self) -> str:
         """
