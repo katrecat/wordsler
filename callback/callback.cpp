@@ -307,14 +307,11 @@ void Callback::disconnectCallback(uint16_t fd)
         }
     }
 
-    // FIXME: Raise error if serverid is still zero
-    printf("Server #%d disconnected\n", serverid);
-
-    for (unsigned int i=0; i<users.size(); i++)
+    for (unsigned int i=users.size(); i>0; i--)
     {
-        if (users[i].serverid == serverid)
+        if (users[i-1].serverid == serverid)
         {
-            users.erase(users.begin() + i);
+            users.erase(users.begin() + i-1);
         }
     }
 }

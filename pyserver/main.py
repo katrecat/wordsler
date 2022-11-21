@@ -98,7 +98,6 @@ def receive_players(socket, amount):
         score = socket.recv(scorelen)
         score = int.from_bytes(score, 'little', signed=False)
         PLAYERS.append((username, score))
-    print(PLAYERS)
     return
 
 
