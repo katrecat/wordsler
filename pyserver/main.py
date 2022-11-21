@@ -33,6 +33,8 @@ def update_canvas():
 
 
 def update_players():
+    global PLAYERS
+    PLAYERS = sorted(PLAYERS, key=lambda x: x[1], reverse=True)
     socketio.emit('leaderboard-event', {'data': PLAYERS})
     return
 
@@ -120,8 +122,15 @@ def rcv_name(data):
     """
 
     username = str(data)[:20]
+    for user, _ in PLAYERS:
+        if username == user:
+            socketio.emit('username-event', {'data': 'ERROR'})
+            return
+    msg = helpers.MessageType.USERNAME.to_bytes() + bytes(request.sid, 'utf-8')
+    msg_len = len(username).to_bytes(2, 'little', signed=False)
+    msg += msg_len + bytes(username, 'utf-8')
+    queue.put(msg)
     socketio.emit('username-event', {'data': 'OK'})
-    print(username)
     return
 
 

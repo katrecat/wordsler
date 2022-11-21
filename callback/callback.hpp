@@ -9,7 +9,7 @@
 #define USERNAME_LEN 32
 #define SID_LEN 20
 #define MSGID_LEN 2
-#define WORDS 10
+#define WORDS 15
 
 namespace Callback
 {
