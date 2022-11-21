@@ -204,4 +204,7 @@ if __name__ == '__main__':
 
     with thread_lock:
         thread = socketio.start_background_task(connect_to_server)
-    socketio.run(app, port=int(sys.argv[1]))
+    try:
+        socketio.run(app, port=int(sys.argv[1]))
+    except OSError:
+        print("[SERVER]: [ERROR]: [FATAL] Address already in use")
