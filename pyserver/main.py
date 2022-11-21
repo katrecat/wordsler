@@ -30,6 +30,9 @@ queue = Queue()
 
 
 def dead():
+    """
+    Sends signal to all the users that server is dead.
+    """
     print("[SERVER]: [ERROR]: [FATAL] Couldn't connect to CPP server!")
     while True:
         socketio.emit('kill-game-event', {'data': "True"})
@@ -38,11 +41,17 @@ def dead():
 
 
 def update_canvas():
+    """
+    Sends the words data to canvas to be drawn.
+    """
     socketio.emit('canvas_event', {'data': SEND})
     return
 
 
 def update_players():
+    """
+    Sends the players list along with their scores to the clients.
+    """
     global PLAYERS
     PLAYERS = sorted(PLAYERS, key=lambda x: x[1], reverse=True)
     socketio.emit('leaderboard-event', {'data': PLAYERS})
@@ -51,14 +60,20 @@ def update_players():
 
 def receive_words(socket, amount):
     """
-    Fetches the word list from cpp server
+    Fetches the word list from cpp server.
     """
     global WORDS, SEND
     WORDS = []
+
+    # Get the total amount of words to be received
     amount = int.from_bytes(amount, 'little', signed=False)
+
     for i in range(amount):
+        # Get the i-th word length
         wordlen = socket.recv(MSGID_LEN)
         wordlen = int.from_bytes(wordlen, 'little', signed=False)
+
+        # Receive the word
         word = socket.recv(wordlen)
         word = helpers.wordFromBytes(word)
         WORDS.append(word)
@@ -67,12 +82,15 @@ def receive_words(socket, amount):
         SEND = [[x, randint(0, SIZE - 8 * len(x)), randint(12, SIZE)]
                 for x in WORDS]
     else:
+        # Find the word got eleminated and get rid of it
         for i in range(len(WORDS)):
             if SEND[i][0] != WORDS[i]:
                 if i != (len(SEND)-1):
                     SEND = SEND[:i] + SEND[i+1:]
                 else:
                     SEND = SEND[:i]
+
+                # Replace it with new word
                 x = randint(0, SIZE - 8 * len(WORDS[-1]))
                 y = randint(12, SIZE)
                 to_add = [WORDS[-1], x, y]
@@ -83,18 +101,28 @@ def receive_words(socket, amount):
 
 def receive_players(socket, amount):
     """
-    Fetches the players list from cpp server
+    Fetches the players list from cpp server.
     """
     global PLAYERS
     PLAYERS = []
+
+    # Get amount of players
     amount = int.from_bytes(amount, 'little', signed=False)
     for i in range(amount):
+
+        # Get the username length
         usernamelen = socket.recv(MSGID_LEN)
         usernamelen = int.from_bytes(usernamelen, 'little', signed=False)
+
+        # Fetch the username
         username = socket.recv(usernamelen)
         username = helpers.wordFromBytes(username)
+
+        # Fetch user score length
         scorelen = socket.recv(MSGID_LEN)
         scorelen = int.from_bytes(scorelen, 'little', signed=False)
+
+        # Fetch the user's score
         score = socket.recv(scorelen)
         score = int.from_bytes(score, 'little', signed=False)
         PLAYERS.append((username, score))
@@ -134,7 +162,7 @@ def connect_to_server():
 @socketio.on('get-name')
 def rcv_name(data):
     """
-    An event to recive username from client.
+    An event that recives username from client and passes it to cpp server.
     """
 
     username = str(data)[:20]
@@ -142,8 +170,8 @@ def rcv_name(data):
         if username == user:
             socketio.emit('username-event', {'data': 'ERROR'}, to=request.sid)
             return
-    msg = helpers.MessageType.USERNAME.to_bytes() + bytes(request.sid, 'utf-8')
     msg_len = len(username).to_bytes(2, 'little', signed=False)
+    msg = helpers.MessageType.USERNAME.to_bytes() + bytes(request.sid, 'utf-8')
     msg += msg_len + bytes(username, 'utf-8')
     queue.put(msg)
     socketio.emit('username-event', {'data': 'OK'}, to=request.sid)
@@ -153,7 +181,7 @@ def rcv_name(data):
 @socketio.on('rcv_msg')
 def rcv_msg(data):
     """
-    An event to recive message from client.
+    An event that recives word from client and passes it to cpp server.
     """
 
     data = str(data)[:255]
