@@ -50,11 +50,16 @@
                     }
                     return false;
                 });
-                
+
                 socket.on('username-event', function(msg, cb) {
                     if (msg.data === "OK") {
                         document.getElementById("outer").style.display = "none";
                         document.getElementById("main-div").style.display = "grid";
+                    } else {
+                            $("#username-input").addClass("shake").delay(500).queue(function(){
+                                $("#username-input").removeClass("shake");
+                                $("#username-input").dequeue();
+                            });
                     };
                 });
 
