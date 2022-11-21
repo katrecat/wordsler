@@ -1,14 +1,14 @@
 #!/usr/bin/python
 
-import socket
 import sys
-import helpers
+import socket
 import select
-from queue import Queue
+import helpers
 from threading import Lock
-from flask import Flask, render_template, request
-from flask_socketio import SocketIO
 from random import randint
+from queue import Queue
+from flask_socketio import SocketIO
+from flask import Flask, render_template, request
 
 async_mode = None
 
@@ -18,13 +18,15 @@ thread = None
 thread_lock = Lock()
 
 HOST = "127.0.0.1"
-PORT = 1234
+PORT = 12345
+SERVER_HOST = "127.0.0.1"
+SERVER_PORT = 1234
 MSGID_LEN = 2
-WORDS = []
-SEND = []
 PLAYERS = []
-queue = Queue()
+SEND = []
 SIZE = 512
+WORDS = []
+queue = Queue()
 
 
 def dead():
@@ -107,7 +109,7 @@ def connect_to_server():
     """
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         try:
-            s.connect((HOST, PORT))
+            s.connect((SERVER_HOST, SERVER_PORT))
         except ConnectionRefusedError:
             dead()
         while True:
@@ -197,14 +199,24 @@ def disconnect():
     return
 
 
-if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print(f"Too few arguments. Use {sys.argv[0]} <port> instead")
-        raise(TypeError)
+def main():
+    global HOST, PORT
+    if len(sys.argv) < 3 and len(sys.argv) > 1:
+        print(f"Too few arguments. Use {sys.argv[0]} <host> <port> instead")
+        return
+    elif len(sys.argv) > 1:
+        HOST = sys.argv[1]
+        PORT = sys.argv[2]
 
+    global thread, thread_lock
     with thread_lock:
         thread = socketio.start_background_task(connect_to_server)
     try:
-        socketio.run(app, port=int(sys.argv[1]))
+        socketio.run(app, host=HOST, port=PORT)
     except OSError:
         print("[SERVER]: [ERROR]: [FATAL] Address already in use")
+    return
+
+
+if __name__ == '__main__':
+    main()
