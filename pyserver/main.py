@@ -27,6 +27,19 @@ queue = Queue()
 SIZE = 512
 
 
+def dead():
+    print("[SERVER]: [ERROR]: [FATAL] Couldn't connect to CPP server!")
+    while True:
+        killGame()
+        socketio.sleep(0.0001)
+    return
+
+
+def killGame():
+    socketio.emit('kill-game-event', {'data': "True"})
+    return
+
+
 def update_canvas():
     socketio.emit('canvas_event', {'data': SEND})
     return
@@ -39,13 +52,12 @@ def update_players():
     return
 
 
-def receive_words(socket):
+def receive_words(socket, amount):
     """
     Fetches the word list from cpp server
     """
     global WORDS, SEND
     WORDS = []
-    amount = socket.recv(MSGID_LEN)
     amount = int.from_bytes(amount, 'little', signed=False)
     for i in range(amount):
         wordlen = socket.recv(MSGID_LEN)
@@ -72,13 +84,12 @@ def receive_words(socket):
     return
 
 
-def receive_players(socket):
+def receive_players(socket, amount):
     """
     Fetches the players list from cpp server
     """
     global PLAYERS
     PLAYERS = []
-    amount = socket.recv(MSGID_LEN)
     amount = int.from_bytes(amount, 'little', signed=False)
     for i in range(amount):
         usernamelen = socket.recv(MSGID_LEN)
@@ -100,13 +111,22 @@ def connect_to_server():
     Sends all the messages presented in queue to the cpp server.
     """
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((HOST, PORT))
+        try:
+            s.connect((HOST, PORT))
+        except ConnectionRefusedError:
+            dead()
         while True:
             socketio.sleep(0.0001)
             read_sockets, _, _ = select.select([s], [], [], 0)
             for sock in read_sockets:
-                receive_words(sock)
-                receive_players(sock)
+                amount = sock.recv(MSGID_LEN)
+                if len(amount) == 0:
+                    dead()
+                receive_words(sock, amount)
+                amount = sock.recv(MSGID_LEN)
+                if len(amount) == 0:
+                    dead()
+                receive_players(sock, amount)
                 update_canvas()
                 update_players()
             if not(queue.empty()):

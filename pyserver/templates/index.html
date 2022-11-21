@@ -51,6 +51,13 @@
                     return false;
                 });
 
+                socket.on('kill-game-event', function(msg, cb) {
+                    if (msg.data === "True") {
+                        document.getElementById("outer").style.display = "none";
+                        document.getElementById("main-div").style.display = "none";
+                    }
+                });
+
                 socket.on('username-event', function(msg, cb) {
                     if (msg.data === "OK") {
                         document.getElementById("outer").style.display = "none";
