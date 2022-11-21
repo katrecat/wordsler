@@ -10,13 +10,21 @@
             $(document).ready(function() {
                 const socket = io();
 
-                // Event handler for server sent data.
-                // The callback function is invoked whenever the server emits data
-                // to the client. The data is then displayed in the "Received"
-                // section of the page.
+                socket.on('kill-game-event', function(msg, cb) {
+                    /*
+                        Turns off the game display if server is dead.
+                    */
+                    if (msg.data === "True") {
+                        document.getElementById("outer").style.display = "none";
+                        document.getElementById("main-div").style.display = "none";
+                    }
+                });
+
                 socket.on('canvas_event', function(msg, cb) {
+                    /*
+                        Draws the words on canvas.
+                    */
                     const canvas = document.getElementById("canvas-queries");
-                    // const canvas = $("#canvas-queries");
                     const ctx = canvas.getContext('2d');
                     const width = canvas.width;
                     const height = canvas.height;
@@ -34,6 +42,9 @@
                 });
 
                 socket.on('leaderboard-event', function(msg, cb) {
+                    /*
+                        Updates the leaderboard list with players currently in the game.
+                    */
                     const leaderboard = document.getElementById('leaderboard-list');
                     leaderboard.textContent = ``;
                     for (let i=0; i<msg.data.length; i++) {
@@ -44,6 +55,9 @@
                 });
 
                 $('form#snd_word').submit(function(event) {
+                    /*
+                        Sends the word to server.
+                    */
                     const data = $('#input_word').val();
                     if (data) {
                         socket.emit('rcv_msg', data);
@@ -51,14 +65,21 @@
                     return false;
                 });
 
-                socket.on('kill-game-event', function(msg, cb) {
-                    if (msg.data === "True") {
-                        document.getElementById("outer").style.display = "none";
-                        document.getElementById("main-div").style.display = "none";
+                $('form#username-input').submit(function(event) {
+                    /*
+                        Sends the username to server.
+                    */
+                    const data = $('#input-username').val();
+                    if (data) {
+                        socket.emit('get-name', data);
                     }
+                    return false;
                 });
 
                 socket.on('username-event', function(msg, cb) {
+                    /*
+                        Handles server's username verification.
+                    */
                     if (msg.data === "OK") {
                         document.getElementById("outer").style.display = "none";
                         document.getElementById("main-div").style.display = "grid";
@@ -68,14 +89,6 @@
                                 $("#username-input").dequeue();
                             });
                     };
-                });
-
-                $('form#username-input').submit(function(event) {
-                    const data = $('#input-username').val();
-                    if (data) {
-                        socket.emit('get-name', data);
-                    }
-                    return false;
                 });
             });
         </script>
