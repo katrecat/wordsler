@@ -30,13 +30,8 @@ SIZE = 512
 def dead():
     print("[SERVER]: [ERROR]: [FATAL] Couldn't connect to CPP server!")
     while True:
-        killGame()
+        socketio.emit('kill-game-event', {'data': "True"})
         socketio.sleep(0.0001)
-    return
-
-
-def killGame():
-    socketio.emit('kill-game-event', {'data': "True"})
     return
 
 
@@ -144,13 +139,13 @@ def rcv_name(data):
     username = str(data)[:20]
     for user, _ in PLAYERS:
         if username == user:
-            socketio.emit('username-event', {'data': 'ERROR'})
+            socketio.emit('username-event', {'data': 'ERROR'}, to=request.sid)
             return
     msg = helpers.MessageType.USERNAME.to_bytes() + bytes(request.sid, 'utf-8')
     msg_len = len(username).to_bytes(2, 'little', signed=False)
     msg += msg_len + bytes(username, 'utf-8')
     queue.put(msg)
-    socketio.emit('username-event', {'data': 'OK'})
+    socketio.emit('username-event', {'data': 'OK'}, to=request.sid)
     return
 
 
