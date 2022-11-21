@@ -32,6 +32,11 @@ def update_canvas():
     return
 
 
+def update_players():
+    socketio.emit('leaderboard-event', {'data': PLAYERS})
+    return
+
+
 def receive_words(socket):
     """
     Fetches the word list from cpp server
@@ -101,9 +106,22 @@ def connect_to_server():
                 receive_words(sock)
                 receive_players(sock)
                 update_canvas()
+                update_players()
             if not(queue.empty()):
                 msg = queue.get()
                 s.sendall(msg)
+    return
+
+
+@socketio.on('get-name')
+def rcv_name(data):
+    """
+    An event to recive username from client.
+    """
+
+    username = str(data)[:20]
+    socketio.emit('username-event', {'data': 'OK'})
+    print(username)
     return
 
 
