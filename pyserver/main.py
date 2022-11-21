@@ -13,7 +13,7 @@ from flask import Flask, render_template, request
 async_mode = None
 
 app = Flask(__name__)
-socketio = SocketIO(app, async_mode=async_mode)
+socketio = SocketIO(app, async_mode=async_mode, async_handlers=True)
 thread = None
 thread_lock = Lock()
 
