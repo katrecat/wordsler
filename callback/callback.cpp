@@ -65,6 +65,23 @@ int processData(int serverid, char *user, char *data)
     return status;
 }
 
+int processUsername(int serverid, char *user, char *data)
+{
+    int status = -1;
+    for (unsigned int i=0; i<users.size(); i++)
+    {
+        if (users[i].serverid == serverid &&
+            (strcmp(users[i].sid, user)) == 0)
+        {
+            std::copy(data, data+strlen(data), users[i].username);
+            users[i].username[strlen(data)] = '\0';
+            status = 0;;
+            break;
+        }
+    }
+    return status;
+}
+
 void addUser(int fd, int serverid)
 {
     user_info tmpuser;
@@ -141,6 +158,46 @@ void sendPlayers(void)
         delete[] len;
     }
     return;
+}
+
+void handleUsername(int fd, int serverid)
+{
+    char *user = new char[SID_LEN];
+    if ((recv(fd, user, SID_LEN, 0)) != SID_LEN)
+    {
+        fprintf(stderr, "[CALLBACK]: [HANDLE DATA]: ERROR: Length doesn't correspond. Exiting\n");
+        exit(-1);
+        return;
+    }
+
+    char *length = new char[MSGID_LEN];
+    if ((recv(fd, length, MSGID_LEN, 0)) != MSGID_LEN)
+    {
+        fprintf(stderr, "[CALLBACK]: [HANDLE DATA]: ERROR: Length doesn't correspond. Exiting\n");
+        exit(-1);
+        return;
+    }
+    int mlength = numFromBytes(length);
+    delete[] length;
+
+    char *username = new char[mlength+1];
+    username[mlength] = '\0';
+    if ((recv(fd, username, mlength, 0)) != mlength)
+    {
+        fprintf(stderr, "[CALLBACK]: [HANDLE DATA]: ERROR: Length doesn't correspond. Exiting\n");
+        exit(-1);
+        return;
+    }
+
+    int status = processUsername(serverid, user, username);
+    if (status == 0)
+    {
+        sendWords();
+        sendPlayers();
+    }
+
+    delete[] user;
+    delete[] username;
 }
 
 void handleData(int fd, int serverid)
@@ -227,6 +284,9 @@ void Callback::inputCallback(uint16_t fd, char *message, int received)
                     break;
                 case 4:
                     handleData(fd, servers[i].id);
+                    break;
+                case 5:
+                    handleUsername(fd, servers[i].id);
                     break;
             }
             break;
