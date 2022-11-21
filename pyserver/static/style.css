@@ -1,0 +1,61 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#main-div {
+    display: none;
+    grid-template-columns: 10% 1fr auto 1fr 10%;
+    gap: 20px;
+}
+
+#outer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+#username-container {
+    align-self: center;
+}
+
+#game {
+    grid-column: 3 / 3;
+}
+
+#leaderboard li {
+    font-size: 14px;
+    list-style: none;
+    margin-left: 5px;
+}
+
+#leaderboard {
+    height: 512px;
+    overflow-y: auto;
+}
+
+#leaderboard-list {
+    padding: 0px;
+    margin: 0px;
+}
+    
+#leaderboard-list li {
+    white-space: nowrap;
+}
+
+#snd_word {
+    text-align: center;
+}
