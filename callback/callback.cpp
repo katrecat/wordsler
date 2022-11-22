@@ -10,13 +10,19 @@ struct Dictionary dict = Dictionary::load("./callback/words.txt");
 
 unsigned int numFromBytes(char *message)
 {
+    /* 
+     * Converts two bytes long message to unsigned int number.
+     */
     unsigned int number = (((unsigned int) ((unsigned char) message[1])) & 0xFF) << 8;
     number += (((unsigned char) message[0]) & 0xFF);
     return number;
 }
 
-void numToBytes(int num, char *message)
+void numToBytes(unsigned int num, char *message)
 {
+    /*
+     * Converts integer to two bytes long usigned character message.
+     */
     message[0] = (num) & 0xFF;
     message[1] = (num >> 8) & 0xFF;
     return;
@@ -24,6 +30,9 @@ void numToBytes(int num, char *message)
 
 void addPoint(int serverid, char *user)
 {
+    /*
+     * Adds a point to a user with corresponding <serverid> and <sid>.
+     */
     for (unsigned int i=0; i<users.size(); i++)
     {
         if (users[i].serverid == serverid &&
@@ -38,6 +47,9 @@ void addPoint(int serverid, char *user)
 
 void updateWords(int index)
 {
+    /*
+     * Replaces the <index> word from the word list with a new one.
+     */
     words.erase(words.begin() + index);
     int max = dict.words.size();
     int randint = std::rand() % max;
@@ -47,26 +59,28 @@ void updateWords(int index)
 
 int processData(int serverid, char *user, char *data)
 {
-    int status = 5;
+    /*
+     * Verifies if <data> is in the current word list.
+     */
+    int status = -1;
     for (int i=0; i<WORDS; i++)
     {
         if ((strcmp(data, words[i].c_str())) == 0)
         {
             addPoint(serverid, user);
             updateWords(i);
-            status = 0;;
+            status = 0;
             break;
         }
     }
-
-    // FIXME
-    for (int i=0; i<WORDS; i++)
-        printf("%s\n", words[i].c_str());
     return status;
 }
 
 int processUsername(int serverid, char *user, char *data)
 {
+    /*
+     * Sets the <data> username to user with corresponding <serverid> and <sid>.
+     */
     int status = -1;
     for (unsigned int i=0; i<users.size(); i++)
     {
@@ -84,6 +98,9 @@ int processUsername(int serverid, char *user, char *data)
 
 void addUser(int fd, int serverid)
 {
+    /*
+     * Adds the user connected to <serverid> to the users list.
+     */
     user_info tmpuser;
     if ((recv(fd, tmpuser.sid, SID_LEN, 0)) != SID_LEN)
     {
@@ -100,6 +117,9 @@ void addUser(int fd, int serverid)
 
 void removeUser(int fd, int serverid)
 {
+    /*
+     * Reads the user <sid> from <serverid> and removes from the users list.
+     */
     char *user = new char[SID_LEN];
     if ((recv(fd, user, SID_LEN, 0)) != SID_LEN)
     {
@@ -120,6 +140,9 @@ void removeUser(int fd, int serverid)
 
 void sendWords(void)
 {
+    /*
+     * Sends the current list of words in the game to connected servers.
+     */
     for (unsigned int i=0; i<servers.size(); i++)
     {
         int fd = servers[i].fd;
@@ -139,6 +162,9 @@ void sendWords(void)
 
 void sendPlayers(void)
 {
+    /*
+     * Sends the current list of players in the game to connected servers.
+     */
     for (unsigned int i=0; i<servers.size(); i++)
     {
         int fd = servers[i].fd;
@@ -162,6 +188,10 @@ void sendPlayers(void)
 
 void handleUsername(int fd, int serverid)
 {
+    /*
+     * Handles the message with USERNAME message id.
+     * Reads the message from server with <serverid> and sends it for further processing.
+     */
     char *user = new char[SID_LEN];
     if ((recv(fd, user, SID_LEN, 0)) != SID_LEN)
     {
@@ -202,6 +232,10 @@ void handleUsername(int fd, int serverid)
 
 void handleData(int fd, int serverid)
 {
+    /*
+     * Handles the message with DATA message id.
+     * Reads the message from server with <serverid> and sends it for further processing.
+     */
     // FIXME Move to separate function
     char *user = new char[SID_LEN];
     if ((recv(fd, user, SID_LEN, 0)) != SID_LEN)
@@ -243,6 +277,9 @@ void handleData(int fd, int serverid)
 
 int Callback::connectionCallback(uint16_t fd)
 {
+    /*
+     * Processes incoming connection;
+     */
     server_info tempserver;
     tempserver.fd = fd;
     int maxid = 1;
@@ -260,6 +297,10 @@ int Callback::connectionCallback(uint16_t fd)
 
 void Callback::inputCallback(uint16_t fd, char *message, int received)
 {
+    /*
+     * Handles the <message> of <received> length and sends it
+     * for further processing.
+     */
     if (received < 2)
     {
         printf("[INPUT CALLBACK]: Error: Received too few bytes");
@@ -296,6 +337,11 @@ void Callback::inputCallback(uint16_t fd, char *message, int received)
 
 void Callback::disconnectCallback(uint16_t fd)
 {
+    /*
+     * Handles the server disconnect.
+     * Removes the server with <fd> from servers list and
+     * erases all the users that were connected through it.
+     */
     int serverid = 0;
     for (unsigned int i=0; i<servers.size(); i++)
     {
@@ -318,6 +364,9 @@ void Callback::disconnectCallback(uint16_t fd)
 
 void Callback::initCallback(void)
 {
+    /*
+     * Initializes the seed and words for the game.
+     */
     int max = dict.words.size();
     std::srand((unsigned) time(NULL));
     int randint;
@@ -326,8 +375,5 @@ void Callback::initCallback(void)
         randint = std::rand() % max;
         words.push_back(dict.words[randint]);
     }
-
-    for (int i=0; i<WORDS; i++)
-        printf("%s\n", words[i].c_str());
     return;
 }
