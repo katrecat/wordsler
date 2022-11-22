@@ -19,7 +19,9 @@ namespace Callback
     void initCallback(void);
 }
 
-struct Dictionary {
+// Holds the words that are currently in the game
+struct Dictionary
+{
     std::vector<std::string> words;
 
     static Dictionary load(const std::string & path) {
@@ -35,14 +37,19 @@ struct Dictionary {
     }
 };
 
-struct user_info {
+
+// Defines connected users parameters
+struct user_info
+{
     char username[USERNAME_LEN];
     char sid[SID_LEN+1];
     int score;
     int serverid;
 };
 
-struct server_info {
+// Defines server information
+struct server_info
+{
     int id;
     int fd;
 };
