@@ -37,6 +37,9 @@ void Server::setup(int port)
     con_info.sin_addr.s_addr = htons(INADDR_ANY);
     // zero the input buffer before use to avoid random data appearing in first receives
     bzero(input_buffer,INPUT_BUFFER_SIZE);
+    #ifdef DEBUG
+    printf("[SERVER] [SETUP] Success\n");
+    #endif
 }
 
 void Server::initializeSocket()
@@ -101,6 +104,9 @@ void Server::handleNewConnection()
         if (tempsocket > maxfd)
             maxfd = tempsocket;
     }
+    #ifdef DEBUG
+    printf("[SERVER] [NEW CONNECTION] Processing...\n");
+    #endif
     if ((connectionCallback(tempsocket)) < 0)
     {
         perror("[SERVER] [CALLBACK] [ERROR] connectionCallback failed");
@@ -124,6 +130,9 @@ void Server::recvInputFromExisting(int fd)
             close(fd);
             // clear the client fd from fd set
             FD_CLR(fd, &masterfds);
+            #ifdef DEBUG
+            printf("[SERVER] [DISCONNECT] Processing...\n");
+            #endif
             disconnectCallback(fd);
             return;
         } 
@@ -135,6 +144,9 @@ void Server::recvInputFromExisting(int fd)
         FD_CLR(fd, &masterfds); // clear the client fd from fd set
         return;
     }
+    #ifdef DEBUG
+    printf("[SERVER] [INPUT] Processing...\n");
+    #endif
     inputCallback(fd, input_buffer, nbytesrecv);
     bzero(&input_buffer,INPUT_BUFFER_SIZE); // clear input buffer
 }

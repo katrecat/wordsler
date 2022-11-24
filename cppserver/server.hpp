@@ -15,6 +15,7 @@ using namespace std;
 
 #define INPUT_BUFFER_SIZE 2
 #define DEFAULT_PORT 1234
+#define DEBUG
 
 class Server {
     public:
