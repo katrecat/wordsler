@@ -28,11 +28,29 @@ void numToBytes(unsigned int num, char *message)
     return;
 }
 
+void readSid(int fd, char *user)
+{
+    /*
+     * Reads the user SID from <fd> and saves it to <user> array.
+     */
+    if ((recv(fd, user, SID_LEN, 0)) != SID_LEN)
+    {
+        fprintf(stderr, "[CALLBACK]: [HANDLE DATA]: ERROR: Length doesn't correspond. Exiting\n");
+        exit(-1);
+        return;
+    }
+    user[SID_LEN] = '\0';
+    return;
+}
+
 void addPoint(int serverid, char *user)
 {
     /*
      * Adds a point to a user with corresponding <serverid> and <sid>.
      */
+    #ifdef DEBUG
+    printf("[CALLBACK] [ADD POINT] looking for user %s from %d server\n", user, serverid);
+    #endif
     for (unsigned int i=0; i<users.size(); i++)
     {
         if (users[i].serverid == serverid &&
@@ -120,15 +138,10 @@ void addUser(int fd, int serverid)
      * Adds the user connected to <serverid> to the users list.
      */
     user_info tmpuser;
-    if ((recv(fd, tmpuser.sid, SID_LEN, 0)) != SID_LEN)
-    {
-        fprintf(stderr, "[CALLBACK]: [ADD USER]: ERROR: Length doesn't correspond. Aborting user adding\n");
-        return;
-    }
+    readSid(fd, tmpuser.sid);
     #ifdef DEBUG
     printf("[CALLBACK] [ADD USER] user: %s\n", tmpuser.sid);
     #endif
-    tmpuser.sid[SID_LEN] = '\0';
     tmpuser.serverid = serverid;
     tmpuser.score = 0;
     std::copy(tmpuser.sid, tmpuser.sid+SID_LEN+1, tmpuser.username);
@@ -141,12 +154,8 @@ void removeUser(int fd, int serverid)
     /*
      * Reads the user <sid> from <serverid> and removes from the users list.
      */
-    char *user = new char[SID_LEN];
-    if ((recv(fd, user, SID_LEN, 0)) != SID_LEN)
-    {
-        fprintf(stderr, "[CALLBACK]: [REMOVE USER]: ERROR: Length doesn't correspond. Aborting user removing\n");
-        return;
-    }
+    char *user = new char[SID_LEN+1];
+    readSid(fd, user);
     #ifdef DEBUG
     printf("[CALLBACK] [REMOVE USER] user: %s\n", user);
     #endif
@@ -219,14 +228,8 @@ void handleUsername(int fd, int serverid)
      * Handles the message with USERNAME message id.
      * Reads the message from server with <serverid> and sends it for further processing.
      */
-    char *user = new char[SID_LEN];
-    if ((recv(fd, user, SID_LEN, 0)) != SID_LEN)
-    {
-        fprintf(stderr, "[CALLBACK]: [HANDLE DATA]: ERROR: Length doesn't correspond. Exiting\n");
-        exit(-1);
-        return;
-    }
-
+    char *user = new char[SID_LEN+1];
+    readSid(fd, user);
     #ifdef DEBUG
     printf("[CALLBACK] [USERNAME] user: %s\n", user);
     #endif
@@ -280,14 +283,8 @@ void handleData(int fd, int serverid)
      * Handles the message with DATA message id.
      * Reads the message from server with <serverid> and sends it for further processing.
      */
-    // FIXME Move to separate function
-    char *user = new char[SID_LEN];
-    if ((recv(fd, user, SID_LEN, 0)) != SID_LEN)
-    {
-        fprintf(stderr, "[CALLBACK]: [HANDLE DATA]: ERROR: Length doesn't correspond. Exiting\n");
-        exit(-1);
-        return;
-    }
+    char *user = new char[SID_LEN+1];
+    readSid(fd, user);
     #ifdef DEBUG
     printf("[CALLBACK] [DATA] user: %s\n", user);
     #endif
