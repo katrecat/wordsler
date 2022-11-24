@@ -38,6 +38,9 @@ void addPoint(int serverid, char *user)
         if (users[i].serverid == serverid &&
             (strcmp(users[i].sid, user)) == 0)
         {
+            #ifdef DEBUG
+            printf("[CALLBACK] [ADD POINT] adding point to usr %s\n", users[i].sid);
+            #endif
             users[i].score = users[i].score + 1;
             break;
         }
@@ -50,6 +53,9 @@ void updateWords(int index)
     /*
      * Replaces the <index> word from the word list with a new one.
      */
+    #ifdef DEBUG
+    printf("[CALLBACK] [UPDATE WORDS] updating words\n");
+    #endif
     words.erase(words.begin() + index);
     int max = dict.words.size();
     int randint = std::rand() % max;
@@ -63,10 +69,16 @@ int processData(int serverid, char *user, char *data)
      * Verifies if <data> is in the current word list.
      */
     int status = -1;
+    #ifdef DEBUG
+    printf("[CALLBACK] [PROCESS DATA] compairing %s with word list\n", data);
+    #endif
     for (int i=0; i<WORDS; i++)
     {
         if ((strcmp(data, words[i].c_str())) == 0)
         {
+            #ifdef DEBUG
+            printf("[CALLBACK] [PROCESS DATA] found match\n");
+            #endif
             addPoint(serverid, user);
             updateWords(i);
             status = 0;
@@ -82,14 +94,20 @@ int processUsername(int serverid, char *user, char *data)
      * Sets the <data> username to user with corresponding <serverid> and <sid>.
      */
     int status = -1;
+    #ifdef DEBUG
+    printf("[CALLBACK] [PROCESS USERNAME] looking for match\n");
+    #endif
     for (unsigned int i=0; i<users.size(); i++)
     {
         if (users[i].serverid == serverid &&
             (strcmp(users[i].sid, user)) == 0)
         {
+            #ifdef DEBUG
+            printf("[CALLBACK] [PROCESS USERNAME] found a match\n");
+            #endif
             std::copy(data, data+strlen(data), users[i].username);
             users[i].username[strlen(data)] = '\0';
-            status = 0;;
+            status = 0;
             break;
         }
     }
@@ -107,6 +125,9 @@ void addUser(int fd, int serverid)
         fprintf(stderr, "[CALLBACK]: [ADD USER]: ERROR: Length doesn't correspond. Aborting user adding\n");
         return;
     }
+    #ifdef DEBUG
+    printf("[CALLBACK] [ADD USER] user: %s\n", tmpuser.sid);
+    #endif
     tmpuser.sid[SID_LEN] = '\0';
     tmpuser.serverid = serverid;
     tmpuser.score = 0;
@@ -126,12 +147,18 @@ void removeUser(int fd, int serverid)
         fprintf(stderr, "[CALLBACK]: [REMOVE USER]: ERROR: Length doesn't correspond. Aborting user removing\n");
         return;
     }
+    #ifdef DEBUG
+    printf("[CALLBACK] [REMOVE USER] user: %s\n", user);
+    #endif
     for (unsigned int i=0; i<users.size(); i++)
     {
         if (users[i].serverid == serverid &&
             (strcmp(users[i].sid, user)) == 0)
         {
             users.erase(users.begin() + i);
+            #ifdef DEBUG
+            printf("[CALLBACK] [REMOVE USER] removed\n");
+            #endif
         }
     }
     delete[] user;
@@ -200,6 +227,10 @@ void handleUsername(int fd, int serverid)
         return;
     }
 
+    #ifdef DEBUG
+    printf("[CALLBACK] [USERNAME] user: %s\n", user);
+    #endif
+
     char *length = new char[MSGID_LEN];
     if ((recv(fd, length, MSGID_LEN, 0)) != MSGID_LEN)
     {
@@ -208,6 +239,9 @@ void handleUsername(int fd, int serverid)
         return;
     }
     int mlength = numFromBytes(length);
+    #ifdef DEBUG
+    printf("[CALLBACK] [USERNAME] length: %d\n", mlength);
+    #endif
     delete[] length;
 
     char *username = new char[mlength+1];
@@ -218,12 +252,22 @@ void handleUsername(int fd, int serverid)
         exit(-1);
         return;
     }
+    #ifdef DEBUG
+    printf("[CALLBACK] [USERNAME] username: %s\n", username);
+    #endif
 
     int status = processUsername(serverid, user, username);
     if (status == 0)
     {
+        #ifdef DEBUG
+        printf("[CALLBACK] [USERNAME] updating user list\n");
+        #endif
         sendWords();
         sendPlayers();
+    }
+    else
+    {
+        printf("[CALLBACK] [USERNAME] [ERROR] didn't update a username for %s\n", user);
     }
 
     delete[] user;
@@ -244,6 +288,9 @@ void handleData(int fd, int serverid)
         exit(-1);
         return;
     }
+    #ifdef DEBUG
+    printf("[CALLBACK] [DATA] user: %s\n", user);
+    #endif
 
     char *length = new char[MSGID_LEN];
     if ((recv(fd, length, MSGID_LEN, 0)) != MSGID_LEN)
@@ -253,6 +300,9 @@ void handleData(int fd, int serverid)
         return;
     }
     int mlength = numFromBytes(length);
+    #ifdef DEBUG
+    printf("[CALLBACK] [DATA] msglen: %d\n", mlength);
+    #endif
     delete[] length;
 
     char *message = new char[mlength+1];
@@ -263,10 +313,16 @@ void handleData(int fd, int serverid)
         exit(-1);
         return;
     }
+    #ifdef DEBUG
+    printf("[CALLBACK] [DATA] message: %s\n", message);
+    #endif
 
     int status = processData(serverid, user, message);
     if (status == 0)
     {
+        #ifdef DEBUG
+        printf("[CALLBACK] [DATA] updating score list\n");
+        #endif
         sendWords();
         sendPlayers();
     }
@@ -292,6 +348,9 @@ int Callback::connectionCallback(uint16_t fd)
     servers.push_back(tempserver);
     sendWords();
     sendPlayers();
+    #ifdef DEBUG
+    printf("[CALLBACK] [CONNECT] Server #%d connected\n", fd);
+    #endif
     return 0;
 }
 
@@ -308,6 +367,9 @@ void Callback::inputCallback(uint16_t fd, char *message, int received)
     }
 
     int id = numFromBytes(message);
+    #ifdef DEBUG
+    printf("[CALLBACK] [INPUT] Server #%d: msgid: %d\n", fd, id);
+    #endif
     for (unsigned int i=0; i<servers.size(); i++)
     {
         if (servers[i].fd == fd)
@@ -360,6 +422,9 @@ void Callback::disconnectCallback(uint16_t fd)
             users.erase(users.begin() + i-1);
         }
     }
+    #ifdef DEBUG
+    printf("[CALLBACK] [DISCONNECT] Server #%d disconnected\n", fd);
+    #endif
 }
 
 void Callback::initCallback(void)

@@ -10,6 +10,7 @@
 #define SID_LEN 20
 #define MSGID_LEN 2
 #define WORDS 15
+#define DEBUG
 
 namespace Callback
 {
