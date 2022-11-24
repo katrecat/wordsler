@@ -17,6 +17,7 @@ socketio = SocketIO(app, async_mode=async_mode, async_handlers=True)
 thread = None
 thread_lock = Lock()
 
+DEBUG = True
 HOST = "127.0.0.1"
 PORT = 12345
 SERVER_HOST = "127.0.0.1"
@@ -36,7 +37,7 @@ def dead():
     print("[SERVER]: [ERROR]: [FATAL] Couldn't connect to CPP server!")
     while True:
         socketio.emit('kill-game-event', {'data': "True"})
-        socketio.sleep(0.0001)
+        socketio.sleep()
     return
 
 
@@ -96,6 +97,8 @@ def receive_words(socket, amount):
                 to_add = [WORDS[-1], x, y]
                 SEND.append(to_add)
                 break
+    if DEBUG:
+        print(f'[SERVER]: [UPDATE WORDS]: {len(WORDS)} words: {WORDS}')
     return
 
 
@@ -126,6 +129,8 @@ def receive_players(socket, amount):
         score = socket.recv(scorelen)
         score = int.from_bytes(score, 'little', signed=False)
         PLAYERS.append((username, score))
+    if DEBUG:
+        print(f'[SERVER]: [UPDATE PLAYERS]: {len(PLAYERS)} players: {PLAYERS}')
     return
 
 
@@ -139,6 +144,8 @@ def connect_to_server():
             s.connect((SERVER_HOST, SERVER_PORT))
         except ConnectionRefusedError:
             dead()
+        if DEBUG:
+            print('[SERVER]: [CONNECT TO CPP]: Successfully connected')
         while True:
             socketio.sleep(0.0001)
             read_sockets, _, _ = select.select([s], [], [], 0)
@@ -165,6 +172,8 @@ def rcv_name(data):
     An event that recives username from client and passes it to cpp server.
     """
 
+    if DEBUG:
+        print(f'[SERVER]: [USERNAME]: {request.sid} sent username: {data}')
     username = str(data)[:20]
     for user, _ in PLAYERS:
         if username == user:
@@ -184,6 +193,8 @@ def rcv_msg(data):
     An event that recives word from client and passes it to cpp server.
     """
 
+    if DEBUG:
+        print(f'[SERVER]: [DATA]: {request.sid} sent \'{str(data)}\'')
     data = str(data)[:255]
     msg_len = len(data).to_bytes(2, 'little', signed=True)
     msg_typ = helpers.MessageType.DATA.to_bytes() + bytes(request.sid, 'utf-8')
@@ -209,6 +220,8 @@ def connect():
     On following users only executes business logic.
     """
 
+    if DEBUG:
+        print(f'[SERVER]: [CONNECTED]: {request.sid} connected')
     msg = helpers.MessageType.CONNECT.to_bytes() + bytes(request.sid, 'utf-8')
     queue.put(msg)
     return
@@ -219,6 +232,9 @@ def disconnect():
     """
     Handles client disconnection.
     """
+
+    if DEBUG:
+        print(f'[SERVER]: [DISCONNECT]: {request.sid} disconnected')
 
     msg = helpers.MessageType.DISCONNECT.to_bytes() + bytes(request.sid,
                                                             'utf-8')
@@ -233,7 +249,7 @@ def main():
         return
     elif len(sys.argv) > 1:
         HOST = sys.argv[1]
-        PORT = sys.argv[2]
+        PORT = int(sys.argv[2])
 
     global thread, thread_lock
     with thread_lock:
