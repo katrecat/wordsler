@@ -20,8 +20,8 @@ thread_lock = Lock()
 DEBUG = True
 HOST = "127.0.0.1"
 PORT = 12345
-SERVER_HOST = "127.0.0.1"
-SERVER_PORT = 1234
+CPPHOST = "127.0.0.1"
+CPPPORT = 1234
 MSGID_LEN = 2
 PLAYERS = []
 SEND = []
@@ -141,7 +141,7 @@ def connect_to_server():
     """
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         try:
-            s.connect((SERVER_HOST, SERVER_PORT))
+            s.connect((CPPHOST, CPPPORT))
         except ConnectionRefusedError:
             dead()
         if DEBUG:
@@ -243,13 +243,18 @@ def disconnect():
 
 
 def main():
-    global HOST, PORT
-    if len(sys.argv) < 3 and len(sys.argv) > 1:
-        print(f"Too few arguments. Use {sys.argv[0]} <host> <port> instead")
-        return
-    elif len(sys.argv) > 1:
+    global HOST, PORT, CPPHOST, CPPPORT
+    if len(sys.argv) == 3:
         HOST = sys.argv[1]
         PORT = int(sys.argv[2])
+    elif len(sys.argv) == 5:
+        HOST = sys.argv[1]
+        PORT = int(sys.argv[2])
+        CPPHOST = sys.argv[3]
+        CPPPORT = int(sys.argv[4])
+    elif len(sys.argv) != 1:
+        print(f"ERROR: Use {sys.argv[0]} <server-host> <server-port> <cpp-host> <cpp-port> instead")
+        return
 
     global thread, thread_lock
     with thread_lock:
