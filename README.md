@@ -30,7 +30,9 @@ python main.py <ip-to-serve> <port> <cpp-server-ip> <cpp-server-port>
 As python server is running, you can obtain connection to it by openning the `htpp://<ip-to-serve>:<port>` in your browser.
 
 ## Dependencies
-TODO
+List:
+* make
+* python3
+* g++/gcc
 
-## Docker image
-TODO
+The python dependencies are present under the `requirements.txt` file.
