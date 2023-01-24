@@ -8,6 +8,7 @@
 
 html, body {
   height: 100%;
+  background: #181a1b;
 }
 
 @keyframes shake {
@@ -71,6 +72,7 @@ form.shake {
 #leaderboard {
     height: 512px;
     overflow-y: auto;
+    color: white;
 }
 
 #leaderboard-list {
