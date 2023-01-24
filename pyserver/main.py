@@ -45,6 +45,7 @@ def update_canvas():
     """
     Sends the words data to canvas to be drawn.
     """
+    print(f'[SERVER]: [SEND WORDS]: {len(SEND)} words: {SEND}')
     socketio.emit('canvas_event', {'data': SEND})
     return
 
@@ -80,8 +81,12 @@ def receive_words(socket, amount):
         WORDS.append(word)
 
     if not(SEND):
-        SEND = [[x, randint(0, SIZE - 8 * len(x)), randint(12, SIZE)]
-                for x in WORDS]
+        SEND = []
+        for x in WORDS:
+            fontSize = 13 + randint(0, 17)
+            cordX = randint(0, SIZE - round(len(x) * fontSize * 0.57))
+            cordY = randint(fontSize * 2, SIZE - fontSize)
+            SEND.append([x, cordX, cordY, fontSize])
     else:
         # Find the word got eleminated and get rid of it
         for i in range(len(WORDS)):
@@ -92,9 +97,11 @@ def receive_words(socket, amount):
                     SEND = SEND[:i]
 
                 # Replace it with new word
-                x = randint(0, SIZE - 8 * len(WORDS[-1]))
-                y = randint(12, SIZE)
-                to_add = [WORDS[-1], x, y]
+                x = WORDS[-1]
+                fontSize = 13 + randint(0, 17)
+                cordX = randint(0, SIZE - round(len(x) * fontSize * 0.57))
+                cordY = randint(fontSize * 2, SIZE - fontSize)
+                to_add = [x, cordX, cordY, fontSize]
                 SEND.append(to_add)
                 break
     if DEBUG:
@@ -179,6 +186,8 @@ def rcv_name(data):
         if username == user:
             socketio.emit('username-event', {'data': 'ERROR'}, to=request.sid)
             return
+    msg = helpers.MessageType.CONNECT.to_bytes() + bytes(request.sid, 'utf-8')
+    queue.put(msg)
     msg_len = len(username).to_bytes(2, 'little', signed=False)
     msg = helpers.MessageType.USERNAME.to_bytes() + bytes(request.sid, 'utf-8')
     msg += msg_len + bytes(username, 'utf-8')
@@ -215,15 +224,14 @@ def index():
 def connect():
     """
     Handles new user connections.
-
-    Starts background task when first user is connected.
-    On following users only executes business logic.
     """
 
+    # It was decided to display user's sid only when they set the proper name
+    # That's why we only log the connection event here.
+    # The "get-name" event is responsible for sending 'CONNECTED'
+    # message to cpp server.
     if DEBUG:
         print(f'[SERVER]: [CONNECTED]: {request.sid} connected')
-    msg = helpers.MessageType.CONNECT.to_bytes() + bytes(request.sid, 'utf-8')
-    queue.put(msg)
     return
 
 
